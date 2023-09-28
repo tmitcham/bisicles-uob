@@ -888,7 +888,7 @@ void AMRSubglacial::runLargeTimestep(Real a_dt,
 
     Real small_dt    = min(a_dt/n_subIts, 0.005);
     
-    n_subIts = floor(a_dt/small_dt);
+    // n_subIts = floor(a_dt/small_dt); commented out by TM to control iterations
 
     Real flux_out = 0.0;
     Real total_runoff = 0.0;
