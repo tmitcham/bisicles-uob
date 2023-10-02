@@ -509,7 +509,7 @@ void AMRSubglacial::setInitialValues(
                   if (mask(iv) == GROUNDEDMASKVAL)
                     {
                       //TODO: at the moment N(0) = 100Pa (small, arbitary), intialise from observations?
-                      //effectivePressure(iv)  = iceDensity*m_g*thckOverFlotation(iv);
+                      effectivePressure(iv)  = iceDensity*m_g*thckOverFlotation(iv); //uncommented by TM
                       hydraulicPotential(iv) = iceDensity*m_g*thisZs(iv) + m_g *(waterDensity - iceDensity)*thisZb(iv) - effectivePressure(iv)+100;
                     }
                   else 
