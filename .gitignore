@@ -25,3 +25,7 @@ p/
 #files that should generally be ignored
 code/libamrfile/libamrfile_python.png
 code/libamrfile/python/AMRFile/amrfile/__pycache__/
+
+#branch specific
+examples/MISMIP3D/inputs*
+examples/SubglacialHydrologyModel/
