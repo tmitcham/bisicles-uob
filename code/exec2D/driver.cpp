@@ -59,9 +59,6 @@
 #include "Regression.H"
 //#include "pythonGIAflux.H"
 
-// For the hydrology module
-#include "AMRSubglacial.H"
-
 /// types of basal friction (beta) distributions
 /** SinusoidalBeta is the one for exp C in Pattyn et al (2008)
     guassianBump is used for the MISMIP3D perturbations tests.
@@ -83,10 +80,7 @@ int main(int argc, char* argv[]) {
   int ierr = 0;
 
 #ifdef CH_USE_PETSC
-#ifndef PETSC_NULLPTR
-#define PETSC_NULLPTR PETSC_NULL
-#endif
-  ierr = PetscInitialize(&argc, &argv,PETSC_NULLPTR,PETSC_NULLPTR); CHKERRQ(ierr);
+  ierr = PetscInitialize(&argc, &argv,PETSC_NULL,PETSC_NULL); CHKERRQ(ierr);
 #else
 #ifdef CH_MPI
   MPI_Init(&argc, &argv);
@@ -938,17 +932,6 @@ int main(int argc, char* argv[]) {
       if (melange_model)
 	{
 	  MelangeIceObserver* ptr = new MelangeIceObserver();
-	  amrObject.addObserver(ptr);
-	}
-    }
-
-    {
-      /// initialize the subglacial model
-      bool subglacial_model = false;
-      pp2.query("subglacial_model",subglacial_model);
-      if (subglacial_model)
-	{
-	  SubglacialIceObserver* ptr = new SubglacialIceObserver();
 	  amrObject.addObserver(ptr);
 	}
     }

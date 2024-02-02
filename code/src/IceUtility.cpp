@@ -829,7 +829,7 @@ void IceUtility::computeSigmaVelocity
 			   CHF_BOX(box));
       
       
-      //CH_assert(uSigma.norm(0) < HUGE_NORM);
+      CH_assert(uSigma.norm(0) < HUGE_NORM);
     } //end compute vertical velocity loop over boxes
       
   a_uSigma.exchange();
@@ -1076,15 +1076,7 @@ void IceUtility::eliminateRemoteIce
 	    {
 	      const IntVect& iv = bit();
 	      Real prevThck = h(iv);
-	      bool isolated = (mask(iv) == FLOATINGMASKVAL && thisPhi(iv) < 0.5);
-
-	      //while we are here, a single cell of grounded ice is a pain too
-	      isolated = isolated || TINY_THICKNESS >
-		(D_TERM(h(iv+BASISV(0)) + h(iv-BASISV(0)),
-			+ h(iv+BASISV(1)) + h(iv-BASISV(1)),
-			0.0) );
-	      
-	      if (isolated)
+	      if (mask(iv) == FLOATINGMASKVAL && thisPhi(iv) < 0.5)
 	      	{
 		  h(iv) = 0.0;
 		  D_DECL(u(iv,0) = 0 ,u(iv,1) = 0, u(iv,2) = 0);
@@ -1093,6 +1085,23 @@ void IceUtility::eliminateRemoteIce
 	      	}
 	      // Record gain/loss of ice
 	      CalvingModel::updateCalvedIce(h(iv),prevThck,mask(iv),added(iv),calved(iv),removed(iv));
+	      //removed(iv) += (prevThck-h(iv));
+	      /*	      if (h(iv) > prevThck)
+		{
+		  added(iv) += (prevThck-h(iv));
+		}
+	      else 
+		{
+		  if (mask(iv) == OPENLANDMASKVAL || mask(iv) == FLOATINGMASKVAL)
+		    {
+		      removed(iv) += (prevThck-h(iv));
+		    }
+		  else
+		    {
+		      removed(iv) += (prevThck-h(iv));
+		    }
+		} 
+	      */
 	    }
 	}
       levelCS.getH().exchange();
