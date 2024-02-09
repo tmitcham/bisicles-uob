@@ -32,3 +32,11 @@ examples/MISMIP3D/input*
 
 #log files
 examples/SubglacialHydrologyModel/outputs/
+
+#documentation outputs
+code/doc/calving.log
+code/doc/doxygen/
+code/doc/inputParameter.aux
+code/doc/inputParameter.log
+code/doc/inputParameter.pdf
+code/doxygen.warn
