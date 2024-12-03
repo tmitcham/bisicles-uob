@@ -941,10 +941,16 @@ int main(int argc, char* argv[]) {
     }
 
 
+    {
     // add a SubglacialHydro observer
-    SubglacialHydroIceObserver* ptr = new SubglacialHydroIceObserver();
-	  amrObject.addObserver(ptr);
-    
+    bool subglacial_hydro_model = false;
+    pp2.query("subglacial_hydro_model",subglacial_hydro_model);
+    if (subglacial_hydro_model)
+      {
+        SubglacialHydroIceObserver* ptr = new SubglacialHydroIceObserver();
+	amrObject.addObserver(ptr);
+      }
+    }
     
     // set up initial grids, initialize data, etc.
     amrObject.initialize();
