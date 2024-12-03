@@ -43,6 +43,7 @@
 #include "AMRDamage.H"
 #include "AMRMelange.H"
 #include "DamageConstitutiveRelation.H"
+#include "SubglacialHydro.H"
 #ifdef HAVE_PYTHON
 #include "PythonInterface.H"
 #endif
@@ -938,6 +939,12 @@ int main(int argc, char* argv[]) {
 	  amrObject.addObserver(ptr);
 	}
     }
+
+
+    // add a SubglacialHydro observer
+    SubglacialHydroIceObserver* ptr = new SubglacialHydroIceObserver();
+	  amrObject.addObserver(ptr);
+    
     
     // set up initial grids, initialize data, etc.
     amrObject.initialize();
