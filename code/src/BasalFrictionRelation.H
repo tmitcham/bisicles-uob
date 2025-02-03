@@ -263,6 +263,35 @@ public:
 };
 
 
+class SUHMOBasalFriction : public BasalFrictionRelation
+
+{
+  
+public:
+
+  virtual void computeAlpha(FArrayBox& a_alpha,
+			    const FArrayBox& a_basalVel,
+			    const FArrayBox& a_C, const Real& a_scale,
+			    const LevelSigmaCS& a_coords, 
+			    const DataIterator& a_dit,
+			    int a_level,
+			    const Box& a_box) const;
+
+
+  SUHMOBasalFriction()
+
+
+  virtual BasalFrictionRelation* getNewBasalFrictionRelation() const
+  {
+    SUHMOBasalFrictionRelation* ptr = 
+      new SUHMOBasalFriction();
+
+    return static_cast<BasalFrictionRelation*>(ptr);
+  }
+
+};
+
+
 
 #include "NamespaceFooter.H"
 
