@@ -9,7 +9,7 @@
 #endif
 
 // Class encapsulating surface fluxes determined  
-// from and Easrth System Model (e.g. UKESM)
+// from an Earth System Model (e.g. UKESM)
 
 // Features include taking ESM grid points from lat/lon
 // and converting to polar stereographic projections
@@ -51,9 +51,6 @@ protected:
   /// function to convert lat/lon data to polar stereographic
 
   /// function to convert elevation tile data to ice sheet grid
-
-
-
 
 #include "NamespaceFooter.H"
 
