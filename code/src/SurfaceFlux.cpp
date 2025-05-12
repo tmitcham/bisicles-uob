@@ -13,6 +13,7 @@
 #include "LevelDataSurfaceFlux.H"
 #include "ISMIP6OceanForcing.H"
 #include "GroundingLineLocalizedFlux.H"
+#include "ESMSurfaceFlux.H"
 #include "HotspotFlux.H"
 #include "BuelerGIA.H"
 #include <map>
@@ -469,6 +470,11 @@ SurfaceFlux* SurfaceFlux::parse(const char* a_prefix)
   else if (type == "IMSIP6OceanForcing")
     {
       ptr = new ISMIP6OceanForcing(pp);
+    }
+
+    else if (type == "ESMSurfaceFlux")
+    {
+      ptr = new ESMSurfaceFlux(pp);
     }
 # ifdef BUELERGIA
   else if (type == "buelerGIA") {

@@ -39,18 +39,33 @@ public:
 
   /// define source term for thickness evolution and place it in flux
   /** 
+   * Is this something that I need to implement?
   */
   virtual void surfaceThicknessFlux(LevelData<FArrayBox>& a_flux,
-				    const AmrIceBase& a_amrIce, 
-				    int a_level, Real a_dt);
+				                        const AmrIceBase& a_amrIce, 
+				                        int a_level, Real a_dt);
 
 protected:
 
+  /// member variables
+  std::string m_file_format;
+  std::string m_name;
+
   /// function to read in ESM data
+  /// do I need that here? Or should this go into the constructor?
 
   /// function to convert lat/lon data to polar stereographic
+  void regridESMtoBISICLES(const LevelData<FArrayBox>& a_input,
+                                       LevelData<FArrayBox>& a_output,
+                                       const RealVect& a_dx,
+                                       const ProblemDomain& a_domain);
 
-  /// function to convert elevation tile data to ice sheet grid
+  void regridBISICLEStoESM(const LevelData<FArrayBox>& a_input,
+                                       LevelData<FArrayBox>& a_output,
+                                       const RealVect& a_dx,
+                                       const ProblemDomain& a_domain)
+
+  };
 
 #include "NamespaceFooter.H"
 

@@ -27,6 +27,18 @@ SurfaceFlux* ESMSurfaceFlux::new_surfaceFlux()
   return static_cast<SurfaceFlux*>(ptr);
 }
 
+ESMSurfaceFlux::ESMSurfaceFlux(ParmParse& a_pp)
+{
+
+  std::string m_file_format;
+  a_pp.get("file_format", m_file_format);
+
+  std::string m_name;
+  a_pp.get("name", m_name);
+
+
+}
+
 void ESMSurfaceFlux::surfaceThicknessFlux
 (LevelData<FArrayBox>& a_flux,
  const AmrIceBase& a_amrIce, 
