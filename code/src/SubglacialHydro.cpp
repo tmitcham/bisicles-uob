@@ -38,10 +38,9 @@ void SubglacialHydroIceObserver::notify(AmrIce::Observer::Notification a_n, AmrI
   pout() <<  "SubglacialHydroIceObserver::notify (" << a_n << ")" << std::endl;
 
   // write some dummy code here to do something in response to a signal from an AmrIce
-  // e.g. that could be calling the SUHMO model
+  // e.g. that could be advancing the SUHMO model in time until some convergence criteria
 
 }
-
 
 SubglacialHydro::~SubglacialHydro()
 {

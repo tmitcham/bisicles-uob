@@ -44,6 +44,9 @@
 #include "AMRMelange.H"
 #include "DamageConstitutiveRelation.H"
 #include "SubglacialHydro.H"
+#include "AmrHydro.H"
+#include "suhmo_params.H"
+#include "HydroIBC.H"
 #ifdef HAVE_PYTHON
 #include "PythonInterface.H"
 #endif
@@ -940,15 +943,34 @@ int main(int argc, char* argv[]) {
 	}
     }
 
-
-    {
-    // add a SubglacialHydro observer
+  // ---------------------------------------------
+  // Create an AmrHydro object
+  // set IBC -- this includes initial conditon
+  // and boundary conditions
+  // ---------------------------------------------
+  
+  {
     bool subglacial_hydro_model = false;
     pp2.query("subglacial_hydro_model",subglacial_hydro_model);
     if (subglacial_hydro_model)
       {
+        AmrHydro amrHydroObject;
+        CoupledIBC* ibcPtr = new CoupledIBC;
+        // get some of the initial parameters from AmrObject at this point
+        // e.g. ibcPtr->setParameters(<params from the ice sheet model>);
+        // although the amrObject might not yet have this data available if it hasn't been initialised
+        hydroIBCPtr = static_cast<HydroIBC*>(ibcPtr);
+
+        // add a SubglacialHydro observer
         SubglacialHydroIceObserver* ptr = new SubglacialHydroIceObserver();
-	amrObject.addObserver(ptr);
+	      amrObject.addObserver(ptr);
+
+        // initialise the amrHydroObject
+        amrHydroObject.setIBC(hydroIBCPtr);
+
+        amrHydroObject.setDomainSize(domainSize);
+
+        amrHydroObject.initialize();
       }
     }
     
@@ -1020,6 +1042,12 @@ int main(int argc, char* argv[]) {
       {
         delete thicknessIBC;
         thicknessIBC=NULL;
+      }
+
+    if (hydroIBCPtr != NULL)
+      {
+          delete hydroIBCPtr;
+          hydroIBCPtr = NULL;
       }
 
      
