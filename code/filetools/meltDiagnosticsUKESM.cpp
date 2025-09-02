@@ -150,6 +150,110 @@ void reportConservationInside(Vector<NameUnitValue>& report,
   
 }
 
+void createDEM( Vector<LevelData<FArrayBox>* >& topography,  
+		Vector<LevelData<FArrayBox>* >& thickness,
+		Vector<LevelData<FArrayBox>* >& iceFrac,
+		const Vector<std::string>& name, 
+		const Vector<LevelData<FArrayBox>* >& data,
+		const Vector<int>& ratio,
+		const Vector<Real>& dx,
+		Real hmin)
+{
+  CH_TIME("createDEM");
+  int numLevels = data.size();
+
+  for (int lev = 0; lev < numLevels; lev++)
+    {
+
+      const DisjointBoxLayout& grids = topography[lev]->disjointBoxLayout();
+      for (DataIterator dit(grids); dit.ok(); ++dit)
+	{
+	  (*topography[lev])[dit].setVal(0.0);
+	  (*thickness[lev])[dit].setVal(0.0);
+	}
+
+      for (int j = 0; j < name.size(); j++)
+	{
+	  if (name[j] == "Z_base")
+	    {
+	      data[lev]->copyTo(Interval(j,j),*topography[lev],Interval(0,0));
+	    }
+	  else if (name[j] == "thickness")
+	    {
+	      data[lev]->copyTo(Interval(j,j),*thickness[lev],Interval(0,0));
+	    }	  
+	}
+
+      //estimate frac
+      for (DataIterator dit(grids); dit.ok(); ++dit)
+	{
+	  for (BoxIterator bit(grids[dit]); bit.ok(); ++bit)
+	    {
+	      (*iceFrac[lev])[dit](bit()) = ((*thickness[lev])[dit](bit()) > hmin)?1.0:0.0;
+	    }
+	}
+      
+      // replace estimated frac with actual frac, it it exists
+      for (int j = 0; j < name.size(); j++)
+	{
+	  if (name[j] == "iceFrac")
+	    {
+	      data[lev]->copyTo(Interval(j,j),*iceFrac[lev],Interval(0,0));
+	    }
+	}
+      
+
+      if (lev > 0)
+	{
+	  
+	  const DisjointBoxLayout& crseGrids = topography[lev-1]->disjointBoxLayout();
+	  PiecewiseLinearFillPatch filler(grids , crseGrids, 1, 
+					  crseGrids.physDomain(), ratio[lev-1], 2);
+	  Real time_interp_coeff = 0.0;
+	  filler.fillInterp(*topography[lev],*topography[lev-1] ,*topography[lev-1],
+			    time_interp_coeff,0, 0, 1);
+	  filler.fillInterp(*thickness[lev],*thickness[lev-1] ,*thickness[lev-1],
+			    time_interp_coeff,0, 0, 1);
+
+	}
+      thickness[lev] -> exchange();
+      topography[lev] -> exchange();
+    }
+}
+
+void createSigmaCS(Vector<RefCountedPtr<LevelSigmaCS > >& coords,
+		   Vector<LevelData<FArrayBox>* >& topography, 
+		   Vector<LevelData<FArrayBox>* >& thickness,
+		   Vector<LevelData<FArrayBox>* >& iceFrac,
+		   Vector<Real>& dx, Vector<int>& ratio,
+		   Real iceDensity, Real waterDensity, Real gravity)
+{
+
+  int numLevels = topography.size();
+
+  IntVect sigmaCSGhost(2*IntVect::Unit);
+       
+  for (int lev = 0; lev < numLevels; lev++)
+    {
+      const DisjointBoxLayout& levelGrids = topography[lev]->disjointBoxLayout();
+	   
+      coords[lev] = RefCountedPtr<LevelSigmaCS> 
+	(new LevelSigmaCS(levelGrids, RealVect::Unit*dx[lev], sigmaCSGhost));
+      coords[lev]->setIceDensity(iceDensity);
+      coords[lev]->setWaterDensity(waterDensity);
+      coords[lev]->setGravity(gravity);
+      // FAB - FAB copy copies ghosts 
+      for (DataIterator dit(levelGrids); dit.ok(); ++dit)
+	{
+	  coords[lev]->getTopography()[dit].copy( (*topography[lev])[dit]);
+	  coords[lev]->getH()[dit].copy( (*thickness[lev])[dit]);
+	}
+      LevelSigmaCS* crseCoords = (lev > 0)?&(*coords[lev-1]):NULL;
+      coords[lev]->recomputeGeometry(crseCoords, (lev > 0)?ratio[lev-1]:0);
+	   
+    }
+       
+}
 
 void extractThicknessSource(Vector<LevelData<FArrayBox>* >& NEMOBasalThicknessSource, 
 			    Vector<LevelData<FArrayBox>* >& basalThicknessSource,
@@ -251,6 +355,12 @@ void stateDiagnostics(std::ostream& sout, bool append, std::string plot_file,
     
   sout.setf(ios_base::scientific,ios_base::floatfield); 
   sout.precision(12);
+
+  createDEM(topography, thickness, iceFrac, name, data, ratio, dx, h_min);
+  
+  Vector<RefCountedPtr<LevelSigmaCS > > coords(numLevels);
+  createSigmaCS(coords,topography, thickness, iceFrac, 
+		dx, ratio, iceDensity, waterDensity,gravity);
 
   extractThicknessSource(NEMOBasalThicknessSource, basalThicknessSource, activeBasalThicknessSource,
 			 topography, dx, ratio, name, data);
