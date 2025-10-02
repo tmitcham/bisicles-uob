@@ -1,4 +1,4 @@
-This branch of BISICLES includes developments for use with UKES<.
+This branch of BISICLES includes developments for use with UKESM.
 Updates include:
 1. A new filetool called `meltDiagnsoticUKESM` which can be used to read fields from a file produced by the NEMO/BISICLES coupling scripts in UKESM and integrate it over domains of interest as the `diagnostics` filetool does
 
