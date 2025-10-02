@@ -1,3 +1,9 @@
+This branch of BISICLES includes developments for use with UKES<.
+Updates include:
+1. A new filetool called `meltDiagnsoticUKESM` which can be used to read fields from a file produced by the NEMO/BISICLES coupling scripts in UKESM and integrate it over domains of interest as the `diagnostics` filetool does
+
+---
+
 BISICLES is an adaptive mesh ice sheet model.
 
 User documentation is in the docs directory and at https://ggslc.github.io/bisicles-uob/. Developer documentation is in the code/docs directory.
