@@ -1,7 +1,7 @@
 # -*- Mode: Makefile -*- 
 ### This makefile produces an executable for each 
 ### name in the `ebase' variable
-ebase :=  nctoamr amrtotxt amrtoplot flatten extract merge addbox amrtocf stats glfaces faces rescale sum pythonf diagnostics gia-stats glfacesNew meltDiagnosticsUKESM
+ebase :=  nctoamr amrtotxt amrtoplot flatten extract merge addbox amrtocf stats rescale sum pythonf diagnostics gia-stats meltDiagnosticsUKESM
 src_dirs = src
 all:  clean libbike 
 
