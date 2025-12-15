@@ -180,11 +180,11 @@ plot.X.CF.2d.hdf5, run (for example)
 <pre>
 amr.plot_style_cf = true
 amr.plot_style_amr = false # leave out to have both sorts of file
-CFIO.land_ice_thickness = true # note the form: CFIO.standard_name = true
-CFIO.land_ice_basal_velocity = true
-CFIO.surface_altitude = true
-CFIO.bedrock_altitude = true
-CFIO.whole_domain_diagnostics = true # write ice volume, etc.
+CFIO.level = 1 # default is 0 (coarsest level); set to desired level
+CFIO.lithk = true # for land_ice_thickness. Note the form: CFIO.short_name = true
+CFIO.velbase = true # for land_ice_basal_velocity
+CFIO.orog = true # for surface_altitude
+CFIO.topg = true # for bedrock_altitude
 
 #specify the coordinate system - optional for BISICLES but needed for CF compliance
 CRS.EPSG = 3031 # EPSG is the only system supported for now
