@@ -175,6 +175,7 @@ AmrIce::AmrIce() : m_velSolver(NULL),
 		   m_rateFactor(NULL),
 		   m_basalFrictionRelation(NULL),
 		   m_basalRateFactor(NULL),
+       m_effectivePressure(NULL),
                    m_thicknessPhysPtr(NULL),
                    m_thicknessIBCPtr(NULL), 
                    m_surfaceFluxPtr(NULL),
@@ -708,6 +709,12 @@ AmrIce::~AmrIce()
     {
       delete m_basalRateFactor;
       m_basalRateFactor = NULL;
+    }
+
+  if (m_effectivePressure != NULL)
+    {
+      delete m_effectivePressure;
+      m_effectivePressure = NULL;
     }
 
   for (int lev=0; lev<m_thicknessPatchGodVect.size(); lev++)

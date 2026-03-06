@@ -32,6 +32,8 @@
 #ifdef HAVE_PYTHON
 #include "PythonInterface.H"
 #endif
+
+#include "EffectivePressure.H"
 #include "NamespaceHeader.H"
 
 /// class to manage non-subcycled AMR ice-sheet model
@@ -101,6 +103,16 @@ public:
    */
   void setBasalFrictionRelation(BasalFrictionRelation* a_basalFrictionRelPtr) 
   {m_basalFrictionRelation = a_basalFrictionRelPtr->getNewBasalFrictionRelation(); }
+
+  //// as above for basal rate factor
+  // set the effective pressure model if it exists
+
+  void setEffectivePressure(EffectivePressure* a_effectivePressurePtr)
+  {
+    if (a_effectivePressurePtr){
+      m_effectivePressure = a_effectivePressurePtr->getNewEffectivePressure();
+    }
+  }
 
 
   /// set BC for thickness advection
@@ -867,6 +879,9 @@ protected:
   BasalFrictionRelation* m_basalFrictionRelation;
   /// rate factor at base
   RateFactor* m_basalRateFactor;
+
+  /// Effectice pressure model for subglacial hydrology
+  EffectivePressure* m_effectivePressure;
 
   /// if false, don't reset basal friction for floating ice to zero (default is true)
   /** This option exists primarly so that we can run the CISM circular 

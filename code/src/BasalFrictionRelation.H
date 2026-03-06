@@ -15,6 +15,7 @@
 #include "FArrayBox.H"
 #include "LevelData.H"
 #include "NamespaceHeader.H"
+#include "EffectivePressure.H"
 
 class LevelSigmaCS;
 class DataIterator;
@@ -210,6 +211,7 @@ private:
   Model m_model;
   Vector<LevelData<FArrayBox>* >* m_tillWaterDepth;
   BasalFrictionRelation* m_bfr; 
+  EffectivePressure* m_effectivePressure;
   
 public:
 
@@ -237,20 +239,37 @@ public:
 
   PressureLimitedBasalFrictionRelation(Real a_a, Real a_p,  Real a_maxTillWaterDepth,
 				       Real a_tillPressureFactor, 
-				       Model a_model,  BasalFrictionRelation* a_bfr)
+				       Model a_model,  BasalFrictionRelation* a_bfr, EffectivePressure* a_effPres = NULL)
     : m_a(a_a), m_p(a_p), m_maxTillWaterDepth(a_maxTillWaterDepth),
       m_tillPressureFactor(a_tillPressureFactor),  m_model(a_model),  
-      m_bfr(a_bfr->getNewBasalFrictionRelation())
+      m_bfr(a_bfr->getNewBasalFrictionRelation()),
+      m_effectivePressure(NULL)
   {
-
+      if (a_effPres != NULL){
+        m_effectivePressure = a_effPres->getNewEffectivePressure();
+      }
   }
 
+  virtual ~PressureLimitedBasalFrictionRelation() 
+  {
+    if (m_bfr != NULL) { delete m_bfr; m_bfr = NULL; }
+    if (m_effectivePressure != NULL) { delete m_effectivePressure; m_effectivePressure = NULL; }
+  }
+
+  // *** NEW *** setter for hot-swapping the N source at run time
+  void setEffectivePressure(EffectivePressure* a_ep)
+  {
+    if (m_effectivePressure != NULL) { delete m_effectivePressure; m_effectivePressure = NULL; }
+    m_effectivePressure = a_ep->getNewEffectivePressure();
+  }
+
+  EffectivePressure* getEffectivePressure() {return m_effectivePressure;}
 
   virtual BasalFrictionRelation* getNewBasalFrictionRelation() const
   {
     PressureLimitedBasalFrictionRelation* ptr = 
       new PressureLimitedBasalFrictionRelation(m_a, m_p, m_maxTillWaterDepth,m_tillPressureFactor ,
-					       m_model, m_bfr);
+					       m_model, m_bfr, m_effectivePressure);
 
     return static_cast<BasalFrictionRelation*>(ptr);
   }

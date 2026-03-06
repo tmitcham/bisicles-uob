@@ -130,45 +130,56 @@ PressureLimitedBasalFrictionRelation::computeAlpha
   m_bfr->computeAlpha(a_alpha, a_basalVel,  a_C,a_scale, a_coords,  a_dit, a_level, a_box);
 
   FArrayBox effectivePressure(a_box,1);
-  const FArrayBox& thckOverFlotation = a_coords.getThicknessOverFlotation()[a_dit];
-  const FArrayBox& thck = a_coords.getH()[a_dit];
-  const Real eps = 1.0e-6;
-  if ( Abs( m_p - 1.0) < eps)
+
+  // New implementation allows for an EffectivePressure object to be passed in
+  if (m_effectivePressure != NULL){
+    m_effectivePressure->computeN(effectivePressure, a_coords, a_dit, a_level, a_box);
+  }
+
+  // Currently keeiping this loop for backwards compatibility, but eventually will remove this loop?
+  else {
+
+    const FArrayBox& thckOverFlotation = a_coords.getThicknessOverFlotation()[a_dit];
+    const FArrayBox& thck = a_coords.getH()[a_dit];
+    const Real eps = 1.0e-6;
+
+    if ( Abs( m_p - 1.0) < eps)
+      {
+        // p == 1;  effective pressure = rho * g * (h-hf)
+        effectivePressure.copy( thckOverFlotation );
+        effectivePressure *= a_coords.iceDensity() * a_coords.gravity();
+      }
+    else
+      {
+        // p != 1 : effective pressure formula from Leguy 2014 (could use this for p = too, but
+        // since there are extra calculations and we think p == 1 is a common case, don't
+        Real rhog = a_coords.iceDensity() * a_coords.gravity();
+        FORT_BFRICTIONLEGUYEFFPRES(CHF_FRA1(effectivePressure,0),
+          CHF_CONST_FRA1(thckOverFlotation,0),
+          CHF_CONST_FRA1(thck,0),
+          CHF_CONST_REAL(m_p),
+          CHF_CONST_REAL(rhog),
+          CHF_BOX(a_box));
+      }
+    
+    FArrayBox& N = effectivePressure;
+    N += 1.0e-10;
+    // optionally, reduce the effective pressure according to the till water depth
+    // formula from Van Pelt and Oerlemans 2012 (Eqn 2).
+    // \todo allow the Bueler and Ven Pelt 2015 formula?
+    if (m_maxTillWaterDepth > 0.0)
+      {
+        const Real& wtMax = m_maxTillWaterDepth;
+        const FArrayBox& wt = (*(*m_tillWaterDepth)[a_level])[a_dit];
+        for (BoxIterator bit(N.box()); bit.ok(); ++bit)
     {
-      // p == 1;  effective pressure = rho * g * (h-hf)
-      effectivePressure.copy( thckOverFlotation );
-      effectivePressure *= a_coords.iceDensity() * a_coords.gravity();
+      const IntVect& iv = bit();
+      Real pw = m_tillPressureFactor * N(iv) * std::min(wt(iv),wtMax) / wtMax;
+      N(iv) =  std::max(0.0, std::min(N(iv), N(iv) - pw));
     }
-  else
-    {
-      // p != 1 : effective pressure formula from Leguy 2014 (could use this for p = too, but
-      // since there are extra calculations and we think p == 1 is a common case, don't
-      Real rhog = a_coords.iceDensity() * a_coords.gravity();
-      FORT_BFRICTIONLEGUYEFFPRES(CHF_FRA1(effectivePressure,0),
-				 CHF_CONST_FRA1(thckOverFlotation,0),
-				 CHF_CONST_FRA1(thck,0),
-				 CHF_CONST_REAL(m_p),
-				 CHF_CONST_REAL(rhog),
-				 CHF_BOX(a_box));
-    }
-  
-  FArrayBox& N = effectivePressure;
-  N += 1.0e-10;
-  // optionally, reduce the effective pressure according to the till water depth
-  // formula from Van Pelt and Oerlemans 2012 (Eqn 2).
-  // \todo allow the Bueler and Ven Pelt 2015 formula?
-  if (m_maxTillWaterDepth > 0.0)
-    {
-      const Real& wtMax = m_maxTillWaterDepth;
-      const FArrayBox& wt = (*(*m_tillWaterDepth)[a_level])[a_dit];
-      for (BoxIterator bit(N.box()); bit.ok(); ++bit)
-	{
-	  const IntVect& iv = bit();
-	  Real pw = m_tillPressureFactor * N(iv) * std::min(wt(iv),wtMax) / wtMax;
-	  N(iv) =  std::max(0.0, std::min(N(iv), N(iv) - pw));
-	}
-    }
-  
+      }
+  }
+
   if (m_model == Tsai)
     {
 
@@ -191,8 +202,7 @@ PressureLimitedBasalFrictionRelation::computeAlpha
 				CHF_CONST_REAL(n),
 				CHF_BOX(a_box));
     }
-
-}
+  }
 
 
 BasalFrictionRelation* 

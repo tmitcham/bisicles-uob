@@ -59,6 +59,8 @@
 #include "Regression.H"
 //#include "pythonGIAflux.H"
 
+#include "EffectivePressure.H"
+
 /// types of basal friction (beta) distributions
 /** SinusoidalBeta is the one for exp C in Pattyn et al (2008)
     guassianBump is used for the MISMIP3D perturbations tests.
@@ -261,6 +263,13 @@ int main(int argc, char* argv[]) {
       = BasalFrictionRelation::parse("main",0);
 
     amrObject.setBasalFrictionRelation(basalFrictionRelationPtr);
+
+    EffectivePressure* effectivePressurePtr = EffectivePressure::parse("main");
+
+    if (effectivePressurePtr)
+      {
+        amrObject.setEffectivePressure(effectivePressurePtr);
+      }      
 
     // ---------------------------------------------
     // set IBC -- this includes initial ice thickness, 
