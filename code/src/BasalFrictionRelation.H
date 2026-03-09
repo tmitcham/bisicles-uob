@@ -256,13 +256,6 @@ public:
     if (m_effectivePressure != NULL) { delete m_effectivePressure; m_effectivePressure = NULL; }
   }
 
-  // *** NEW *** setter for hot-swapping the N source at run time
-  void setEffectivePressure(EffectivePressure* a_ep)
-  {
-    if (m_effectivePressure != NULL) { delete m_effectivePressure; m_effectivePressure = NULL; }
-    m_effectivePressure = a_ep->getNewEffectivePressure();
-  }
-
   EffectivePressure* getEffectivePressure() {return m_effectivePressure;}
 
   virtual BasalFrictionRelation* getNewBasalFrictionRelation() const

@@ -53,10 +53,7 @@ EffectivePressure::parse(const char* a_prefix)
       std::string variable = "effectivePressure";
       ppFile.query("variable", variable);
 
-      RealVect dx = RealVect::Unit;
-      ppFile.queryarr("dx", dx);
-
-      ptr = new EffectivePressureFromFile(file, variable, dx);
+      ptr = new EffectivePressureFromFile(file, variable);
     }
   else
     {
@@ -120,15 +117,14 @@ HydrostaticEffectivePressure::computeN(FArrayBox&            a_N,
     }
 }
 
+
 // New class to read effective pressure from a file, e.g. SUHMO plot file.
 // Uses the ReadLevelData infrastructure
 
 EffectivePressureFromFile::EffectivePressureFromFile(const std::string& a_file,
-                                                     const std::string& a_variable,
-                                                     const RealVect& a_dx)
+                                                     const std::string& a_variable)
   : m_file(a_file),
-    m_variable(a_variable),
-    m_dx(a_dx)
+    m_variable(a_variable)
 {
 }
 
@@ -146,18 +142,19 @@ EffectivePressureFromFile::computeN(FArrayBox&            a_N,
   // Build the single-variable name list expected by readLevelData.
   Vector<std::string> names(1, m_variable);
 
-  m_data.resize(1);
-  m_data[0] = RefCountedPtr<LevelData<FArrayBox> >(new LevelData<FArrayBox>);
+  Real dx;
 
-  readLevelData(m_data, m_dx, m_file, names, 1 /*nComp*/);
+  RefCountedPtr<LevelData<FArrayBox> > TF(new LevelData<FArrayBox>);
+  Vector<RefCountedPtr<LevelData<FArrayBox> > > vectData(1, TF);
+  readLevelData(vectData,dx,m_file,names,1);
 
-  pout() << "EffectivePressureFromFile: loaded, dx = " << m_dx << std::endl;
+  pout() << "EffectivePressureFromFile: loaded " << dx << std::endl;
 
   // For a level-0-only file the index is 0.
   // For multi-level files, clamp to the available levels.
-  int srcLevel = std::min(a_level, (int)m_data.size() - 1);
+  int srcLevel = std::min(a_level, (int)vectData.size() - 1);
 
-  const LevelData<FArrayBox>& srcLD = *m_data[srcLevel];
+  const LevelData<FArrayBox>& srcLD = *vectData[srcLevel];
 
   // Copy overlapping region.  If the source grids don't match the
   // destination exactly, Chombo's copyTo will do the right thing

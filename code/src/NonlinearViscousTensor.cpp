@@ -353,7 +353,7 @@ void IceNonlinearViscousTensor::setState(const Vector<LevelData<FArrayBox>*>& a_
         
 	  // also update alpha
           const Box& gridBox = levelGrids[dit];
-
+// end loop on mu here??? 
 	  m_basalFrictionRelPtr->computeAlpha
 		      (levelAlpha[dit], levelVel[dit], levelC[dit] , m_scale, 	
 	     levelCoords, dit, lev, gridBox);

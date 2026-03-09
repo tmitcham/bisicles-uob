@@ -15,6 +15,7 @@
 #include "LevelData.H"
 #include "LevelSigmaCS.H"
 #include "RefCountedPtr.H"
+#include "AmrIceBase.H"
 #include "NamespaceHeader.H"
 
 /// Base class for effective pressure models.
@@ -46,21 +47,20 @@ public:
                         int                    a_level,
                         const Box&             a_box) const = 0;
 
-  /// Virtual copy constructor.
   virtual EffectivePressure* getNewEffectivePressure() const = 0;
 
   static EffectivePressure* parse(const char* a_prefix);
 };
 
 
-/// Hydrostatic effective pressure: the existing BISICLES default.
+/// Hydrostatic effective pressure
 /**
-   Implements the two formulae already present in the code:
+   Implements the two existing formulae:
 
    - When p == 1:  \f$ N = \rho_i g (h - h_f) \f$
    - When p != 1:  \f$ N = \rho_i g \, h^{1-p} (h - h_f)^p \f$  (Leguy 2014)
 
-   This class also supports the Van Pelt & Oerlemans 2012 till-water-depth
+   Also supports the Van Pelt & Oerlemans 2012 till-water-depth
    reduction, as in the original PressureLimitedBasalFrictionRelation.
 */
 class HydrostaticEffectivePressure : public EffectivePressure
@@ -108,15 +108,13 @@ private:
 /**
    Reads N from a variable in a Chombo AMR HDF5 file.  SUHMO writes
    effectivePressure directly.
-
 */
 class EffectivePressureFromFile : public EffectivePressure
 {
 public:
 
   EffectivePressureFromFile(const std::string& a_file,
-                            const std::string& a_variable = "effectivePressure",
-                            const RealVect& a_dx);
+                            const std::string& a_variable = "effectivePressure");
 
   virtual ~EffectivePressureFromFile() {}
 
@@ -128,14 +126,13 @@ public:
 
   virtual EffectivePressure* getNewEffectivePressure() const
   {
-    return new EffectivePressureFromFile(m_file, m_variable, m_dx);
+    return new EffectivePressureFromFile(m_file, m_variable);
   }
 
 private:
 
   std::string m_file;
   std::string m_variable;
-  RealVect m_dx;
 
 };
 

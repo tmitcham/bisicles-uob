@@ -1,0 +1,43 @@
+# Domain: 100km x 100km (matching SUHMO AMR_multiMoulins)
+main.domain_size = 100000.0 100000.0
+
+# Time stepping
+amr.maxTime = 1000
+amr.maxStep = 10
+
+# Grid
+amr.num_cells = 64 64
+amr.max_level = 0
+
+# Geometry (flat bed with surface from "dino" setup, match SUHMO)
+# Need to copy the MountainIBCs from SUHMO
+
+# Basal friction relation: pressure-limited power law
+# with effective pressure read from SUHMO water pressure
+
+main.basalFrictionRelation = pressureLimitedLaw
+BasalFrictionPressureLimitedLaw.coefficient = 0.5
+BasalFrictionPressureLimitedLaw.model = Tsai
+BasalFrictionPressureLimitedLaw.basalFrictionRelation = powerLaw
+BasalFrictionPowerLaw.m = 0.3333
+
+# SUHMO Coupling
+main.effectivePressure = LevelData
+EffectivePressureFromFile.file = test.suhmo.N.hdf5
+EffectivePressureFromFile.variable = effectivePressure
+
+# Checkpoint for restart between coupling iterations
+amr.check_prefix = chk
+amr.check_interval = 10
+
+# Plot output
+amr.plot_prefix = plot.bisicles.
+amr.plot_interval = 10
+
+# Surface flux (constant, simple)
+surfaceFlux.type = constantFlux
+surfaceFlux.flux_value = 0.3  # m/yr accumulation
+
+# Basal friction coefficient
+geometry.beta_type = constantBeta
+geometry.betaValue = 1000.0
