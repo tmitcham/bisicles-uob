@@ -16,6 +16,8 @@
 #include "LevelSigmaCS.H"
 #include "RefCountedPtr.H"
 #include "AmrIceBase.H"
+#include "FillFromReference.H"
+#include <map>
 #include "NamespaceHeader.H"
 
 /// Base class for effective pressure models.
@@ -109,33 +111,46 @@ private:
    Reads N from a variable in a Chombo AMR HDF5 file.  SUHMO writes
    effectivePressure directly.
 */
-class EffectivePressureFromFile : public EffectivePressure
+class LevelDataEffectivePressure : public EffectivePressure
 {
 public:
 
-  EffectivePressureFromFile(const std::string& a_file,
-                            const std::string& a_variable = "effectivePressure");
+  LevelDataEffectivePressure(const std::string& a_file,
+                             const std::string& a_variable = "effectivePressure");
 
-  virtual ~EffectivePressureFromFile() {}
+  virtual ~LevelDataEffectivePressure() {}
 
-  virtual void computeN(FArrayBox&            a_N,
-                        const LevelSigmaCS&   a_coords,
+  virtual void computeN(FArrayBox&             a_N,
+                        const LevelSigmaCS&    a_coords,
                         const DataIterator&    a_dit,
                         int                    a_level,
                         const Box&             a_box) const;
 
   virtual EffectivePressure* getNewEffectivePressure() const
   {
-    return new EffectivePressureFromFile(m_file, m_variable);
+    return new LevelDataEffectivePressure(m_file, m_variable);
   }
 
 private:
 
+  void loadData() const;
+
+  /// Fill m_mappedData[a_level] using FillFromReference from m_cachedData.
+  void fillLevel(const LevelSigmaCS& a_coords, int a_level) const;
+
   std::string m_file;
   std::string m_variable;
 
-};
+  /// Raw data loaded from HDF5 (populated once by loadData)
+  mutable bool m_loaded;
+  mutable Vector<RefCountedPtr<LevelData<FArrayBox>>> m_cachedData;
+  mutable Real m_dx;
 
+  /// Per-destination-level cache: data mapped onto the BISICLES grids
+  /// via FillFromReference (populated lazily per level in fillLevel)
+  mutable std::map<int, RefCountedPtr<LevelData<FArrayBox>>> m_mappedData;
+
+};
 
 #include "NamespaceFooter.H"
 #endif

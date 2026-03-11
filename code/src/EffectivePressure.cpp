@@ -12,6 +12,7 @@
 #include "BasalFrictionRelationF_F.H"  // for FORT_BFRICTIONLEGUYEFFPRES
 #include "IceConstants.H"
 #include "ReadLevelData.H"
+#include "FillFromReference.H"
 #include "BoxIterator.H"
 #include "ParmParse.H"
 #include "NamespaceHeader.H"
@@ -45,7 +46,7 @@ EffectivePressure::parse(const char* a_prefix)
     }
   else if (type == "LevelData")
     {
-      ParmParse ppFile("EffectivePressureFromFile");
+      ParmParse ppFile("LevelDataEffectivePressure");
 
       std::string file;
       ppFile.get("file", file);
@@ -53,7 +54,7 @@ EffectivePressure::parse(const char* a_prefix)
       std::string variable = "effectivePressure";
       ppFile.query("variable", variable);
 
-      ptr = new EffectivePressureFromFile(file, variable);
+      ptr = new LevelDataEffectivePressure(file, variable);
     }
   else
     {
@@ -121,68 +122,89 @@ HydrostaticEffectivePressure::computeN(FArrayBox&            a_N,
 // New class to read effective pressure from a file, e.g. SUHMO plot file.
 // Uses the ReadLevelData infrastructure
 
-EffectivePressureFromFile::EffectivePressureFromFile(const std::string& a_file,
-                                                     const std::string& a_variable)
+LevelDataEffectivePressure::LevelDataEffectivePressure(const std::string& a_file,
+                                                       const std::string& a_variable)
   : m_file(a_file),
-    m_variable(a_variable)
+    m_variable(a_variable),
+    m_loaded(false),
+    m_dx(0.0)
 {
 }
 
 void
-EffectivePressureFromFile::computeN(FArrayBox&            a_N,
-                                    const LevelSigmaCS&   a_coords,
-                                    const DataIterator&    a_dit,
-                                    int                    a_level,
-                                    const Box&             a_box) const
+LevelDataEffectivePressure::loadData() const
 {
-  
-  // Read the data from file
-  pout() << "EffectivePressureFromFile: reading N from " << m_file << std::endl;
+  if (m_loaded) return;
 
-  // Build the single-variable name list expected by readLevelData.
+  pout() << "LevelDataEffectivePressure: reading N from " << m_file << std::endl;
+
   Vector<std::string> names(1, m_variable);
+  readLevelData(m_cachedData, m_dx, m_file, names, 1);
 
-  Real dx;
+  pout() << "LevelDataEffectivePressure: loaded, dx=" << m_dx
+         << ", " << m_cachedData.size() << " level(s)" << std::endl;
 
-  RefCountedPtr<LevelData<FArrayBox> > TF(new LevelData<FArrayBox>);
-  Vector<RefCountedPtr<LevelData<FArrayBox> > > vectData(1, TF);
-  readLevelData(vectData,dx,m_file,names,1);
+  m_loaded = true;
+}
 
-  pout() << "EffectivePressureFromFile: loaded " << dx << std::endl;
 
-  // For a level-0-only file the index is 0.
-  // For multi-level files, clamp to the available levels.
-  int srcLevel = std::min(a_level, (int)vectData.size() - 1);
+void
+LevelDataEffectivePressure::fillLevel(const LevelSigmaCS& a_coords,
+                                      int                 a_level) const
+{
+  // Already mapped for this level?
+  if (m_mappedData.find(a_level) != m_mappedData.end())
+    return;
 
-  const LevelData<FArrayBox>& srcLD = *vectData[srcLevel];
+  loadData();
 
-  // Copy overlapping region.  If the source grids don't match the
-  // destination exactly, Chombo's copyTo will do the right thing
-  // (intersection-based copy).  Areas of a_box that aren't covered
-  // will keep their previous value, so we initialise to zero first.
-  a_N.setVal(0.0);
+  // Pick the best available source level
+  int srcLevel = std::min(a_level, (int)m_cachedData.size() - 1);
+  const LevelData<FArrayBox>& srcLD = *m_cachedData[srcLevel];
 
-  // Walk the source boxes and copy any intersection.
-  for (DataIterator srcDit = srcLD.dataIterator(); srcDit.ok(); ++srcDit)
+  // Build destination LevelData on the BISICLES grids for this level
+  const DisjointBoxLayout& destGrids = a_coords.grids();
+  RefCountedPtr<LevelData<FArrayBox>> destLD(
+    new LevelData<FArrayBox>(destGrids, 1, IntVect::Zero));
+
+  // Source and destination dx
+  RealVect srcDx  = m_dx * RealVect::Unit;
+  RealVect destDx = a_coords.dx();
+
+  pout() << "LevelDataEffectivePressure::fillLevel: level " << a_level
+         << ", srcDx=" << srcDx[0] << ", destDx=" << destDx[0] << std::endl;
+
+  FillFromReference(*destLD, srcLD, destDx, srcDx, true /*verbose*/);
+
+  // Make sure there are no negative values of N
+  for (DataIterator dit = destLD->dataIterator(); dit.ok(); ++dit)
     {
-      const FArrayBox& srcFab = srcLD[srcDit()];
-      Box overlap = a_box & srcFab.box();
-      if (!overlap.isEmpty())
+      FArrayBox& N = (*destLD)[dit];
+      const Box& box = destGrids[dit];
+      for (BoxIterator bit(box); bit.ok(); ++bit)
         {
-          a_N.copy(srcFab, overlap, 0, overlap, 0, 1);
+          if (N(bit()) < 0.0)  N(bit()) = 0.0;
         }
+      N += 1.0e-10;
     }
 
-  // Ensure non-negative (SUHMO can produce small negative N near margins).
-  for (BoxIterator bit(a_box); bit.ok(); ++bit)
-    {
-      const IntVect& iv = bit();
-      if (a_N(iv) < 0.0)
-        a_N(iv) = 0.0;
-    }
+  m_mappedData[a_level] = destLD;
+}
 
-  // Same regularisation as the hydrostatic model.
-  a_N += 1.0e-10;
+
+void
+LevelDataEffectivePressure::computeN(FArrayBox&             a_N,
+                                     const LevelSigmaCS&    a_coords,
+                                     const DataIterator&    a_dit,
+                                     int                    a_level,
+                                     const Box&             a_box) const
+{
+  // Ensure the mapped data exists for this level
+  fillLevel(a_coords, a_level);
+
+  // Copy from the pre-filled mapped data for this patch
+  const LevelData<FArrayBox>& mappedLD = *m_mappedData.at(a_level);
+  a_N.copy(mappedLD[a_dit], a_box, 0, a_box, 0, 1);
 }
 
 #include "NamespaceFooter.H"
