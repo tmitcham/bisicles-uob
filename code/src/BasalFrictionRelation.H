@@ -14,8 +14,9 @@
 
 #include "FArrayBox.H"
 #include "LevelData.H"
-#include "NamespaceHeader.H"
 #include "EffectivePressure.H"
+
+#include "NamespaceHeader.H"
 
 class LevelSigmaCS;
 class DataIterator;
@@ -80,6 +81,11 @@ public:
   virtual BasalFrictionRelation* getNewBasalFrictionRelation() const = 0;
 
   virtual Real power() const = 0;
+
+  /// Allow runtime injection of an EffectivePressure object
+  virtual void setEffectivePressure(EffectivePressure* a_eff)
+  {
+  }
 
   /// Run-time configuration of BasalFrictionRelation objects
   static BasalFrictionRelation* parse(const char* a_prefix, int a_recursion );
@@ -265,6 +271,15 @@ public:
 					       m_model, m_bfr, m_effectivePressure);
 
     return static_cast<BasalFrictionRelation*>(ptr);
+  }
+  
+  virtual void setEffectivePressure(EffectivePressure* a_eff)
+  {
+    if (m_effectivePressure != NULL) { delete m_effectivePressure; m_effectivePressure = NULL; }
+    if (a_eff != NULL)
+      {
+        m_effectivePressure = a_eff->getNewEffectivePressure();
+      }
   }
     
 

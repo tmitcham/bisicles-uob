@@ -102,7 +102,13 @@ public:
   /** needs to be done before calling initialize
    */
   void setBasalFrictionRelation(BasalFrictionRelation* a_basalFrictionRelPtr) 
-  {m_basalFrictionRelation = a_basalFrictionRelPtr->getNewBasalFrictionRelation(); }
+  {
+    m_basalFrictionRelation = a_basalFrictionRelPtr->getNewBasalFrictionRelation();
+    if (m_basalFrictionRelation != NULL && m_effectivePressure != NULL)
+      {
+        m_basalFrictionRelation->setEffectivePressure(m_effectivePressure);
+      }
+  }
 
   //// as above for basal rate factor
   // set the effective pressure model if it exists
@@ -111,6 +117,10 @@ public:
   {
     if (a_effectivePressurePtr){
       m_effectivePressure = a_effectivePressurePtr->getNewEffectivePressure();
+      if (m_basalFrictionRelation != NULL)
+        {
+          m_basalFrictionRelation->setEffectivePressure(a_effectivePressurePtr);
+        }
     }
   }
 

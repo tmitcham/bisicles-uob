@@ -161,7 +161,9 @@ PressureLimitedBasalFrictionRelation::computeAlpha
           CHF_CONST_REAL(rhog),
           CHF_BOX(a_box));
       }
-    
+
+  }
+
     FArrayBox& N = effectivePressure;
     N += 1.0e-10;
     // optionally, reduce the effective pressure according to the till water depth
@@ -178,7 +180,7 @@ PressureLimitedBasalFrictionRelation::computeAlpha
       N(iv) =  std::max(0.0, std::min(N(iv), N(iv) - pw));
     }
       }
-  }
+
 
   if (m_model == Tsai)
     {
