@@ -139,6 +139,10 @@ LevelDataEffectivePressure::loadData() const
   pout() << "LevelDataEffectivePressure: reading N from " << m_file << std::endl;
 
   Vector<std::string> names(1, m_variable);
+  // readLevelData requires a_data to be pre-allocated (one entry per name).
+  m_cachedData.resize(names.size(),
+                      RefCountedPtr<LevelData<FArrayBox>>(
+                        new LevelData<FArrayBox>()));
   readLevelData(m_cachedData, m_dx, m_file, names, 1);
 
   pout() << "LevelDataEffectivePressure: loaded, dx=" << m_dx

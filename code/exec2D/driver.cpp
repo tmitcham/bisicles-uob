@@ -32,6 +32,7 @@
 #include "MarineIBC.H"
 #include "HumpIBC.H"
 #include "LevelDataIBC.H"
+#include "MountainIBC.H"
 #include "MultiLevelDataIBC.H"
 #include "IceInternalEnergyIBC.H"
 #include "LevelDataTemperatureIBC.H"
@@ -753,7 +754,16 @@ int main(int argc, char* argv[]) {
 	 thicknessIBC = static_cast<IceThicknessIBC*>( ptr);
        }
 #endif
-     else 
+     else if (problem_type == "dino")
+       {
+         // Mountain ("dino") geometry for coupled BISICLES-SUHMO test cases.
+         // Bed topography and ice thickness match SUHMO's MountainIBC.
+         // Velocity BCs are read from bc.lo_bc / bc.hi_bc (0=Dirichlet,
+         // 1=Neumann, 2=slip-wall); bc.new_bc = true enables per-direction
+         // control via CompGridVTOBC.
+         thicknessIBC = new MountainIBC();
+       }
+     else
        {
          MayDay::Error("bad problem type");
        }

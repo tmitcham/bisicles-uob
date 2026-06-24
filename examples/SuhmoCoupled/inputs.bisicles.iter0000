@@ -106,3 +106,7 @@ amr.plot_prefix    = plot.bisicles.
 amr.plot_interval  = 5
 
 amr.verbosity = 5
+# --- coupling iteration 0 overrides ---
+main.maxStep = 10
+amr.check_interval = 10
+main.poutBaseName = pout.bisicles.iter0000
