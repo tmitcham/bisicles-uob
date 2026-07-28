@@ -2713,12 +2713,16 @@ AmrIce::restart(const string& a_restart_file,
 #define CFIO_FIELD_LAND_ICE_THICKNESS_SHORT_NAME "lithk"
 #define CFIO_FIELD_SURFACE_ALTITUDE_SHORT_NAME "orog"
 #define CFIO_FIELD_BEDROCK_ALTITUDE_SHORT_NAME "topg"
+#define CFIO_FIELD_BASE_ALTITUDE_SHORT_NAME "base"
 #define CFIO_FIELD_LAND_ICE_BASAL_VELOCITY_SHORT_NAME "velbase"
 #define CFIO_FIELD_LAND_ICE_SURFACE_VELOCITY_SHORT_NAME "velsurf"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_VELOCITY_SHORT_NAME "velmean"
 #define CFIO_FIELD_LAND_ICE_BASAL_X_VELOCITY_SHORT_NAME "xvelbase"
 #define CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_SHORT_NAME "yvelbase"
 #define CFIO_FIELD_LAND_ICE_SURFACE_X_VELOCITY_SHORT_NAME "xvelsurf"
 #define CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_SHORT_NAME "yvelsurf"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_SHORT_NAME "xvelmean"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_SHORT_NAME "yvelmean"
 #define CFIO_FIELD_LAND_ICE_AREA_FRACTION_SHORT_NAME "sftgif"
 #define CFIO_FIELD_GROUNDED_ICE_AREA_FRACTION_SHORT_NAME "sftgrf"
 #define CFIO_FIELD_FLOATING_ICE_AREA_FRACTION_SHORT_NAME "sftflf"
@@ -2750,10 +2754,13 @@ AmrIce::restart(const string& a_restart_file,
 #define CFIO_FIELD_LAND_ICE_SURFACE_VELOCITY_CF_NAME "land_ice_surface_velocity"
 #define CFIO_FIELD_SURFACE_ALTITUDE_CF_NAME "surface_altitude"
 #define CFIO_FIELD_BEDROCK_ALTITUDE_CF_NAME "bedrock_altitude"
+#define CFIO_FIELD_BASE_ALTITUDE_CF_NAME "land_ice_base_altitude"
 #define CFIO_FIELD_LAND_ICE_BASAL_X_VELOCITY_CF_NAME "land_ice_basal_x_velocity"
 #define CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_CF_NAME "land_ice_basal_y_velocity"
 #define CFIO_FIELD_LAND_ICE_SURFACE_X_VELOCITY_CF_NAME "land_ice_surface_x_velocity"
 #define CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_CF_NAME "land_ice_surface_y_velocity"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_CF_NAME "land_ice_vertical_mean_x_velocity"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_CF_NAME "land_ice_vertical_mean_y_velocity"
 #define CFIO_FIELD_LAND_ICE_AREA_FRACTION_CF_NAME "land_ice_area_fraction"
 #define CFIO_FIELD_GROUNDED_ICE_AREA_FRACTION_CF_NAME "grounded_ice_sheet_area_fraction"
 #define CFIO_FIELD_FLOATING_ICE_AREA_FRACTION_CF_NAME "floating_ice_sheet_area_fraction"
@@ -2762,25 +2769,26 @@ AmrIce::restart(const string& a_restart_file,
 #define CFIO_FIELD_TEMPERATURE_GROUNDED_ICE_BASE_CF_NAME "temperature_at_base_of_ice_sheet_model"
 #define CFIO_FIELD_TEMPERATURE_FLOATING_ICE_BASE_CF_NAME "temperature_at_base_of_ice_sheet_model" 
 #define CFIO_FIELD_MAGNITUDE_BASAL_DRAG_CF_NAME "land_ice_basal_drag" 
-
 #define CFIO_FIELD_LAND_ICE_GL_FLUX_CF_NAME "land_ice_specific_mass_flux_due_to_discharge_across_gl"
 #define CFIO_FIELD_LAND_ICE_CALVING_FLUX_CF_NAME "land_ice_specific_mass_flux_due_to_calving"
 #define CFIO_FIELD_SURFACE_MASS_BALANCE_FLUX_CF_NAME "land_ice_surface_specific_mass_balance_flux"
 #define CFIO_FIELD_BASAL_MASS_BALANCE_FLUX_CF_NAME "land_ice_basal_specific_mass_balance_flux"
 #define CFIO_FIELD_GROUNDED_ICE_BASAL_MASS_BALANCE_FLUX_CF_NAME "land_ice_basal_specific_mass_balance_flux_ice"
 #define CFIO_FIELD_FLOATING_ICE_BASAL_MASS_BALANCE_FLUX_CF_NAME "land_ice_basal_specific_mass_balance_flux_ice"
-
 #define CFIO_FIELD_LAND_ICE_THICKNESS_IMBALANCE_CF_NAME "tendency_of_land_ice_thickness"
 #define CFIO_FIELD_ICE_FRONT_CALVING_AND_MELT_CF_NAME "land_ice_specific_mass_flux_due_to_calving_and_ice_front_melting"
 #define CFIO_FIELD_GEOTHERMAL_FLUX_CF_NAME "upward_geothermal_heat_flux_at_ground_level_in_land_ice"
 
 #define CFIO_FIELD_LAND_ICE_THICKNESS_LONG_NAME "Ice-sheet thickness"
-#define CFIO_FIELD_SURFACE_ALTITUDE_LONG_NAME "Ice-sheet altitude"
+#define CFIO_FIELD_SURFACE_ALTITUDE_LONG_NAME "Ice-sheet surface altitude"
 #define CFIO_FIELD_BEDROCK_ALTITUDE_LONG_NAME "Bedrock altitude"
+#define CFIO_FIELD_BASE_ALTITUDE_LONG_NAME "Ice-sheet base altitude"
 #define CFIO_FIELD_LAND_ICE_BASAL_X_VELOCITY_LONG_NAME "X-component of land ice basal velocity"
 #define CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_LONG_NAME "Y-component of land ice basal velocity"
 #define CFIO_FIELD_LAND_ICE_SURFACE_X_VELOCITY_LONG_NAME "X-component of land ice surface velocity"
 #define CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_LONG_NAME "Y-component of land ice surface velocity"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_LONG_NAME "X-component of land ice vertical mean velocity"
+#define CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_LONG_NAME "Y-component of land ice vertical mean velocity"
 #define CFIO_FIELD_LAND_ICE_AREA_FRACTION_LONG_NAME "Land ice area fraction"
 #define CFIO_FIELD_GROUNDED_ICE_AREA_FRACTION_LONG_NAME "Grounded ice area fraction"
 #define CFIO_FIELD_FLOATING_ICE_AREA_FRACTION_LONG_NAME "Floating ice-sheet area fraction"
@@ -2789,7 +2797,6 @@ AmrIce::restart(const string& a_restart_file,
 #define CFIO_FIELD_TEMPERATURE_GROUNDED_ICE_BASE_LONG_NAME "Basal temperature of grounded ice sheet"
 #define CFIO_FIELD_TEMPERATURE_FLOATING_ICE_BASE_LONG_NAME "Basal temperature of floating ice shelf"
 #define CFIO_FIELD_MAGNITUDE_BASAL_DRAG_LONG_NAME "Land ice basal drag" 
-
 #define CFIO_FIELD_LAND_ICE_THICKNESS_IMBALANCE_LONG_NAME "Ice thickness imbalance"
 #define CFIO_FIELD_LAND_ICE_GL_FLUX_LONG_NAME "Land ice grounding line flux"
 #define CFIO_FIELD_LAND_ICE_CALVING_FLUX_LONG_NAME "Land ice calving flux"
@@ -2908,8 +2915,30 @@ void AmrIce::initCFData()
       m_cf_field_function.push_back( [this](int a_lev, LevelData<FArrayBox>& a_buf){return &(geometry(a_lev)->getTopography());} );
       m_cf_field_interval.push_back( Interval(0,0));
     }
-  
-  // x and y components of basal velocity. Ask for x, get y too
+
+
+  // ice base (lower surface) elevation
+  if (test(CFIO_FIELD_BASE_ALTITUDE_SHORT_NAME,ppf,false))
+    {
+      pout() << "AmrIceIO:: CF base" << endl;
+      m_uniform_cf_data_name.push_back(CFIO_FIELD_BASE_ALTITUDE_SHORT_NAME);
+      m_uniform_cf_time_integration.push_back(time_integration(CFIO_FIELD_BASE_ALTITUDE_SHORT_NAME));
+      m_uniform_cf_standard_name.push_back(CFIO_FIELD_BASE_ALTITUDE_CF_NAME);
+      m_uniform_cf_long_name.push_back(CFIO_FIELD_BASE_ALTITUDE_LONG_NAME);
+      m_uniform_cf_units.push_back("m");
+      m_cf_field_function.push_back( [this](int a_lev, LevelData<FArrayBox>& a_buf)
+		      {
+		        for (DataIterator dit=a_buf.dataIterator(); dit.ok(); ++dit)
+			{
+			   a_buf[dit].copy(geometry(a_lev)->getSurfaceHeight()[dit]);
+			   a_buf[dit] -= geometry(a_lev)->getH()[dit];	
+			}
+		        return &a_buf;});
+      m_cf_field_interval.push_back( Interval(0,0));
+    }
+ 
+
+  // x and y components of basal velocity. 
   if (test(CFIO_FIELD_LAND_ICE_BASAL_VELOCITY_SHORT_NAME,ppf,false))
     { 
       pout() << "AmrIceIO:: CF basal veolcity" << endl;
@@ -2919,17 +2948,17 @@ void AmrIce::initCFData()
       m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_BASAL_X_VELOCITY_LONG_NAME);
       m_uniform_cf_units.push_back("m yr^-1");
       m_cf_field_function.push_back([this](int a_lev, LevelData<FArrayBox>& a_buf){return &(*m_layerSFaceXYVel[a_lev]);} );
-      m_cf_field_interval.push_back( Interval(m_nLayers,m_nLayers+1)); // when x is requested, supply x and y
+      m_cf_field_interval.push_back( Interval(2*m_nLayers,2*m_nLayers)); // when x is requested, supply x and y
       m_uniform_cf_data_name.push_back(CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_SHORT_NAME);
       m_uniform_cf_time_integration.push_back(time_integration(CFIO_FIELD_LAND_ICE_BASAL_VELOCITY_SHORT_NAME));
       m_uniform_cf_standard_name.push_back(CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_CF_NAME);
       m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_BASAL_Y_VELOCITY_LONG_NAME);
       m_uniform_cf_units.push_back("m yr^-1");
       m_cf_field_function.push_back([this](int a_lev, LevelData<FArrayBox>& a_buf){return  &(*m_layerSFaceXYVel[a_lev]) ;} );
-      m_cf_field_interval.push_back( Interval(m_nLayers,m_nLayers+1)); // when y is requested, supply x and y. Shouldn't happen
+      m_cf_field_interval.push_back( Interval(2*m_nLayers+1,2*m_nLayers+1)); // when y is requested, supply x and y. Shouldn't happen
     } 
 
-  // x and y components of surface velocity. Ask for x, get y too
+  // x and y components of surface velocity.
   if (test(CFIO_FIELD_LAND_ICE_SURFACE_VELOCITY_SHORT_NAME,ppf,false))
     { 
       pout() << "AmrIceIO:: CF surface velocity" << endl;
@@ -2939,15 +2968,67 @@ void AmrIce::initCFData()
       m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_SURFACE_X_VELOCITY_LONG_NAME);
       m_uniform_cf_units.push_back("m yr^-1");
       m_cf_field_function.push_back([this](int a_lev, LevelData<FArrayBox>& a_buf){return  &(*m_layerSFaceXYVel[a_lev]);} );
-      m_cf_field_interval.push_back( Interval(0,1)); // when x is requested, supply x and y
+      m_cf_field_interval.push_back( Interval(0,0)); // when x is requested, supply x and y
       m_uniform_cf_data_name.push_back(CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_SHORT_NAME);
       m_uniform_cf_time_integration.push_back(time_integration(CFIO_FIELD_LAND_ICE_SURFACE_VELOCITY_SHORT_NAME));
       m_uniform_cf_standard_name.push_back(CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_CF_NAME);
       m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_SURFACE_Y_VELOCITY_LONG_NAME);
       m_uniform_cf_units.push_back("m yr^-1");
       m_cf_field_function.push_back([this](int a_lev, LevelData<FArrayBox>& a_buf){return  &(*m_layerSFaceXYVel[a_lev]) ;} );
-      m_cf_field_interval.push_back( Interval(0,1)); // when y is requested, supply x and y. Shouldn't happen
+      m_cf_field_interval.push_back( Interval(1,1)); // when y is requested, supply x and y. Shouldn't happen
     }
+
+
+   auto vint = [](LevelData<FArrayBox>& a_buf, const LevelData<FArrayBox>& a_y, const Vector<Real>& a_x, 
+		   int a_step, int a_off )
+   {
+	// vertical integral(a_y, a_x, a_x[0], a_x[-1]) via trapezium rule
+	for (DataIterator dit(a_buf.dataIterator()); dit.ok(); ++dit)
+	{
+	a_buf[dit].setVal(0.0);
+        FArrayBox q(a_buf[dit].box(),1);
+	for (int j = 0; j < a_x.size() ; j++)
+	      	{
+		   q.copy( a_y[dit], j * a_step + a_off , 0, 1);
+		   Real w;
+		   if (j == 0){
+			w = 0.5 * (a_x[1] - a_x[0]);
+		   } else if (j == (a_x.size() - 1)) {
+			w = 0.5 * (a_x[j] - a_x[j-1]);
+		   } else {
+		        w = 0.5 * (a_x[j+1] - a_x[j-1]);
+		   }
+                   q *= w;		   
+		   a_buf[dit] += q;
+		}
+	}
+	return &a_buf;
+   };
+
+ // x and y components of vertical mean velocity. 
+  if (test(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_VELOCITY_SHORT_NAME,ppf,false))
+    { 
+      pout() << "AmrIceIO:: CF mean velocity" << endl;
+      m_uniform_cf_data_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_SHORT_NAME);
+      m_uniform_cf_time_integration.push_back(time_integration(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_VELOCITY_SHORT_NAME));
+      m_uniform_cf_standard_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_CF_NAME);
+      m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_X_VELOCITY_LONG_NAME);
+      m_uniform_cf_units.push_back("m yr^-1");
+      m_cf_field_function.push_back([this,vint](int a_lev, LevelData<FArrayBox>& a_buf){
+	      return vint(a_buf, *m_layerSFaceXYVel[a_lev], m_faceSigma, SpaceDim, 0);}); 
+      m_cf_field_interval.push_back( Interval(0,0));
+      m_uniform_cf_data_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_SHORT_NAME);
+      m_uniform_cf_time_integration.push_back(time_integration(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_VELOCITY_SHORT_NAME));
+      m_uniform_cf_standard_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_CF_NAME);
+      m_uniform_cf_long_name.push_back(CFIO_FIELD_LAND_ICE_VERTICAL_MEAN_Y_VELOCITY_LONG_NAME);
+      m_uniform_cf_units.push_back("m yr^-1");    
+      m_cf_field_function.push_back([this,vint](int a_lev, LevelData<FArrayBox>& a_buf){
+	      return vint(a_buf, *m_layerSFaceXYVel[a_lev], m_faceSigma, SpaceDim, 1);}); 
+      m_cf_field_interval.push_back( Interval(0,0)); // when y is requested, supply x and y. Shouldn't happen
+    }
+
+
+
 
   // temperature at the top of the ice sheet model
   if (test(CFIO_FIELD_TEMPERATURE_ICE_TOP_SHORT_NAME,ppf,false))
