@@ -1846,7 +1846,7 @@ void setToZero(Vector<LevelData<FArrayBox>*>& a_data)
 {
   for (int lev=0; lev < a_data.size(); lev++)
     {
-      setVal(*a_data[lev], 0.0);
+      if (a_data[lev]) setVal(*a_data[lev], 0.0);
     }
 }
 
