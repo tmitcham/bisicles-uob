@@ -439,7 +439,7 @@ void ISMIP6OceanForcing::surfaceThicknessFlux
   pout() << "ISMIP6OceanForcing::surfaceThicknessFlux " << std::endl;
   
   const Real& time = a_amrIce.time();
-  if (time < m_uniform_source_year)
+  if (time < Real(m_start_year))
     {
       MayDay::Error("Time out of range for ISMIP6 Ocean forcing");
     }
@@ -448,6 +448,10 @@ void ISMIP6OceanForcing::surfaceThicknessFlux
        && (time <= Real(m_end_year)) )
     {
       updateUniformSource(time, a_amrIce);
+    }
+  else if (time > Real(m_end_year))
+    {
+     updateUniformSource(Real(m_end_year) , a_amrIce);
     }
   
   const RealVect& levelDx = a_amrIce.dx(a_level);
