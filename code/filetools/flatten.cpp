@@ -122,8 +122,7 @@ int main(int argc, char* argv[]) {
     Vector<std::string> cf_long_names;
     Vector<std::string> cf_units;
     Vector<std::string> cf_standard_names;
-    Vector<std::string> cf_FL_ST;
-    Vector<Real> cf_times;
+    Vector<int> cf_time_integration;
     int err;
     for (int i = 0; i < names.size(); ++i)
       {
@@ -139,12 +138,13 @@ int main(int argc, char* argv[]) {
 	    cf_long_names.push_back(attributeInfo.m_string["Long name"]);
 	    cf_units.push_back(attributeInfo.m_string["Units"]);
 	    cf_standard_names.push_back(attributeInfo.m_string["Standard name"]);
-	    cf_times.push_back(attributeInfo.m_real["time"]);
-	    cf_FL_ST.push_back(attributeInfo.m_string["FL_ST"]);
+	    cf_time_integration.push_back(attributeInfo.m_int["time_integration"]);
+	   
 	    if (verbose)
 	      {
 		pout() << "    with attributes " << cf_standard_names[i] 
-		       << ", " << cf_units[i] << ", " << cf_long_names[i] << endl;
+		       << ", " << cf_units[i] << ", " << cf_long_names[i]
+		       << endl;
 	      }
 	  }
 	else
@@ -152,8 +152,7 @@ int main(int argc, char* argv[]) {
 	    cf_long_names.push_back("");
 	    cf_units.push_back("");
 	    cf_standard_names.push_back("");
-	    cf_times.push_back(0);
-	    cf_FL_ST.push_back("");
+	    cf_time_integration.push_back(0);
 	  }
       }
 
@@ -326,8 +325,7 @@ int main(int argc, char* argv[]) {
 #ifdef HAVE_NETCDF
 	    
 	    std::string flattenInfo("slc removed this feature to see if it was causing chaos");
-	    NCIO::writeFAB(out_file, names, cf_standard_names, cf_units, cf_long_names,
-			   cf_FL_ST, cf_times,
+	    NCIO::writeFAB(out_file, names, cf_standard_names, cf_units, cf_long_names, cf_time_integration,
 			   validFab, flatDx, time,
 			   x0, epsg, domain_diagnostic_data, flattenInfo.c_str(), in_file_header);
 #else

@@ -300,6 +300,7 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
   Vector<LevelData<FArrayBox>* >& smb = a_amrIce.m_surfaceThicknessSource;
   Vector<LevelData<FArrayBox>* >& bmb = a_amrIce.m_basalThicknessSource;
   Vector<LevelData<FArrayBox>* >& cflux = a_amrIce.m_calvedIceThickness;
+  Vector<LevelData<FArrayBox>* >& glflux = a_amrIce.m_fluxGL;
   Vector<LevelData<FArrayBox>* >& frac = a_amrIce.m_iceFrac;
   
   int maskNo = 0; int maskComp = 0; // might support this later
@@ -333,9 +334,52 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
   m_ice_floating_total_bmb.push_back(rhoi*sumScalar(bmb, floating));
   m_ice_grounded_total_bmb.push_back(rhoi*sumScalar(bmb, grounded));
   m_ice_total_calving_flux.push_back(rhoi*sumScalar(cflux, entire));
-  //m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, grounded));
-  m_ice_total_gl_flux.push_back(1.2345678e+300); // for now
+  m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, grounded));
 }
+
+DomainDiagnosticData* DomainDiagnosticData::timeMean()
+{
+  // DomainDiagnosticData with a single time
+  DomainDiagnosticData* mean_ptr = new DomainDiagnosticData();
+  if (mean_ptr)
+    {
+      DomainDiagnosticData& mean = *mean_ptr;
+      mean.reset();
+      mean.m_time.push_back(0.0);
+     
+      mean.m_ice_total_smb.push_back(0.0);
+      mean.m_ice_total_bmb.push_back(0.0);
+      mean.m_ice_floating_total_bmb.push_back(0.0);
+      mean.m_ice_grounded_total_bmb.push_back(0.0);
+      mean.m_ice_total_calving_flux.push_back(0.0);
+      mean.m_ice_total_gl_flux.push_back(0.0);
+      
+      int n = m_time.size() - 1;
+      // flux quantities are defined at mid-times
+      Real Dt = m_time[n] - m_time[0];
+     
+      for (int i = 1; i < m_time.size(); i++)
+	{
+	  Real dt = (m_time[i] - m_time[i-1])/Dt;
+	  mean.m_ice_total_bmb[0] += m_ice_total_bmb[i]*dt;
+	  mean.m_ice_total_smb[0] += m_ice_total_smb[i]*dt;
+	  mean.m_ice_total_calving_flux[0] += m_ice_total_calving_flux[i]*dt;
+	  mean.m_ice_total_gl_flux[0] += m_ice_total_gl_flux[i]*dt;
+	  mean.m_ice_floating_total_bmb[0] += m_ice_floating_total_bmb[i]*dt;
+	  mean.m_ice_grounded_total_bmb[0] += m_ice_grounded_total_bmb[i]*dt;
+	}
+      // state quantities are defined at end-times
+      mean.m_time[0] = m_time[n];
+      mean.m_ice_volume.push_back(m_ice_volume[n]);
+      mean.m_ice_vaf.push_back(m_ice_vaf[n]);
+      mean.m_ice_grounded_area.push_back(m_ice_grounded_area[n]);
+      mean.m_ice_floating_area.push_back(m_ice_floating_area[n]);
+    }
+
+  return mean_ptr;
+}
+
+
 
 inline 
 void last_to_first_resize(Vector<Real>& a_v)
@@ -348,7 +392,7 @@ void last_to_first_resize(Vector<Real>& a_v)
 }
 
 
-void DomainDiagnosticData::reset()
+void DomainDiagnosticData::reset(int a_len)
 {
 
  if (m_time.size() > 0)
@@ -368,17 +412,17 @@ void DomainDiagnosticData::reset()
    }
  else
    {
-     m_time.resize(0);
-     m_ice_volume.resize(0);
-     m_ice_vaf.resize(0);
-     m_ice_grounded_area.resize(0);
-     m_ice_floating_area.resize(0);
-     m_ice_total_smb.resize(0);
-     m_ice_total_bmb.resize(0);
-     m_ice_floating_total_bmb.resize(0);
-     m_ice_grounded_total_bmb.resize(0);
-     m_ice_total_calving_flux.resize(0);
-     m_ice_total_gl_flux.resize(0);
+     m_time.resize(a_len);
+     m_ice_volume.resize(a_len);
+     m_ice_vaf.resize(a_len);
+     m_ice_grounded_area.resize(a_len);
+     m_ice_floating_area.resize(a_len);
+     m_ice_total_smb.resize(a_len);
+     m_ice_total_bmb.resize(a_len);
+     m_ice_floating_total_bmb.resize(a_len);
+     m_ice_grounded_total_bmb.resize(a_len);
+     m_ice_total_calving_flux.resize(a_len);
+     m_ice_total_gl_flux.resize(a_len);
    }
 }
 

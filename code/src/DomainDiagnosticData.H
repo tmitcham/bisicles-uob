@@ -146,9 +146,9 @@ public:
   DomainDiagnosticData();
 
 private:
-  /// disable copy constructor
+  // disable copy constructor
   DomainDiagnosticData(const DomainDiagnosticData&);
-  /// disable assignment 
+  // disable assignment 
   DomainDiagnosticData& operator=(const DomainDiagnosticData&);
 public:
 
@@ -161,7 +161,10 @@ public:
   /// record diagnostics given the current state of a_amrIce
   void record(AmrIce& a_amrIce);
   /// reset 
-  void reset();
+  void reset(int a_len=0);
+  
+  // integrate all quantities over time, return a DiagnosticData containing the means
+  DomainDiagnosticData* timeMean();
   
 #ifdef CH_USE_HDF5
   /// write to hdf5

@@ -3713,7 +3713,8 @@ void AmrIce::writeCFData(string a_filename)
     }
 
   // //   HDF5Handle handle(filename, HDF5Handle::mode::OPEN_RDWR);
-  m_cf_domain_diagnostic_data.write(handle);
+  DomainDiagnosticData* mean = m_cf_domain_diagnostic_data.timeMean();
+  if (mean) {mean->write(handle); delete(mean);}
   
   handle.close();
 }

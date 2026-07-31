@@ -168,8 +168,7 @@ void NCIO::writeFAB(const std::string& a_file,
 		    const Vector<std::string>& a_cf_standard_names,
 		    const Vector<std::string>& a_cf_units,
 		    const Vector<std::string>& a_cf_long_names,
-		    const Vector<std::string>& a_cf_FL_ST,
-		    const Vector<Real>& a_cf_times,
+		    const Vector<int>& a_cf_time_integration,
 		    const FArrayBox& a_fab, 
 		    const Real& a_dx,
 		    const Real& a_time,
@@ -288,11 +287,9 @@ void NCIO::writeFAB(const std::string& a_file,
 	   rc = nc_put_att_text(ncID, varID, "units", strlen(c), c); 
 	   c = a_cf_long_names[i].c_str();
 	   rc = nc_put_att_text(ncID, varID, "long_name", strlen(c), c);
-	   c = a_cf_FL_ST[i].c_str();
-	   rc = nc_put_att_text(ncID, varID, "FL_ST", strlen(c), c);
 	   
-	   rc = nc_put_att_double(ncID, varID, "time",
-				  NC_DOUBLE,1,&a_cf_times[i]);
+	   rc = nc_put_att_int(ncID, varID, "time_integration",
+				  NC_DOUBLE,1,&a_cf_time_integration[i]);
 	 }
        else
 	 {

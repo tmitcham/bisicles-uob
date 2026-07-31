@@ -2808,13 +2808,14 @@ AmrIce::computeThicknessFluxes(Vector<LevelData<FluxBox>* >& a_vectFluxes,
 			{
 			  IntVect ivp = iv + BASISV(dir);
 		          if (mask(ivp) == FLOATINGMASKVAL || mask(ivp) == OPENSEAMASKVAL)
-				 fluxGL(iv) -= Abs(flux[dir](ivp));
+			    fluxGL(iv) += -flux[dir](ivp); // = +ve flux -> a sink
 			  IntVect ivm = iv - BASISV(dir);
 			  if (mask(ivm) == FLOATINGMASKVAL || mask(ivm) == OPENSEAMASKVAL)
-				 fluxGL(iv) -= Abs(flux[dir](iv));
+			    fluxGL(iv) += flux[dir](iv); // -ve flux -> a sink 
 			}
 		  }
 		}
+		fluxGL /= (m_amrDx[lev]); // thickness transported across faces per unit *grid area*
 	}
   }
 
