@@ -246,7 +246,15 @@ void DomainDiagnosticData::setCFdata()
   cf_info.units = "kg yr^-1";
   cf_info.data = &m_ice_total_gl_flux;
   m_cf_stuff.push_back(cf_info);
-  
+
+  // some non-cf stuff that is handy for our purpose
+  cf_info.short_name = "limerrcon";
+  cf_info.cf_name = "error_in_conservation_of_land_ice_mass";
+  cf_info.long_name = "Error in conservation of land ice mass";
+  cf_info.units = "kg yr^-1";
+  cf_info.data = &m_error_ice_mass_con;
+  m_cf_stuff.push_back(cf_info);
+
 
 }
 
@@ -335,6 +343,24 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
   m_ice_grounded_total_bmb.push_back(rhoi*sumScalar(bmb, grounded));
   m_ice_total_calving_flux.push_back(rhoi*sumScalar(cflux, entire));
   m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, grounded));
+
+  int nt = m_time.size() - 1;
+  Real err = 0.0;
+  if (nt > 0){
+      err = (m_ice_volume[nt] - m_ice_volume[nt-1])/(m_time[nt] - m_time[nt-1])
+	  - (m_ice_total_smb[nt] + m_ice_total_bmb[nt] - m_ice_total_calving_flux[nt]);
+	
+  }
+  m_error_ice_mass_con.push_back(err);
+
+  
+  for (int i = 0; i < m_cf_stuff.size(); i++)
+    {
+      pout() << "DomainDiagnosticsData: "
+	     << m_cf_stuff[i].short_name << " =  " << (*m_cf_stuff[i].data)[nt] << " " << m_cf_stuff[i].units << std::endl;
+	     
+    }
+  
 }
 
 DomainDiagnosticData* DomainDiagnosticData::timeMean()
@@ -353,29 +379,34 @@ DomainDiagnosticData* DomainDiagnosticData::timeMean()
       mean.m_ice_grounded_total_bmb.push_back(0.0);
       mean.m_ice_total_calving_flux.push_back(0.0);
       mean.m_ice_total_gl_flux.push_back(0.0);
-      
+      mean.m_error_ice_mass_con.push_back(0.0);     
       int n = m_time.size() - 1;
-      // flux quantities are defined at mid-times
-      Real Dt = m_time[n] - m_time[0];
-     
-      for (int i = 1; i < m_time.size(); i++)
+      if (n > 0)
 	{
-	  Real dt = (m_time[i] - m_time[i-1])/Dt;
-	  mean.m_ice_total_bmb[0] += m_ice_total_bmb[i]*dt;
-	  mean.m_ice_total_smb[0] += m_ice_total_smb[i]*dt;
-	  mean.m_ice_total_calving_flux[0] += m_ice_total_calving_flux[i]*dt;
-	  mean.m_ice_total_gl_flux[0] += m_ice_total_gl_flux[i]*dt;
-	  mean.m_ice_floating_total_bmb[0] += m_ice_floating_total_bmb[i]*dt;
-	  mean.m_ice_grounded_total_bmb[0] += m_ice_grounded_total_bmb[i]*dt;
+	  // flux quantities are defined at mid-times
+	  Real Dt = m_time[n] - m_time[0];
+	  
+	  for (int i = 1; i < m_time.size(); i++)
+	    {
+	      Real dt = (m_time[i] - m_time[i-1])/Dt;
+	      mean.m_ice_total_bmb[0] += m_ice_total_bmb[i]*dt;
+	      mean.m_ice_total_smb[0] += m_ice_total_smb[i]*dt;
+	      mean.m_ice_total_calving_flux[0] += m_ice_total_calving_flux[i]*dt;
+	      mean.m_ice_total_gl_flux[0] += m_ice_total_gl_flux[i]*dt;
+	      mean.m_ice_floating_total_bmb[0] += m_ice_floating_total_bmb[i]*dt;
+	      mean.m_ice_grounded_total_bmb[0] += m_ice_grounded_total_bmb[i]*dt;
+	      
+	      mean.m_error_ice_mass_con[0] += m_error_ice_mass_con[i]*dt;
+	    }
+	  // state quantities are defined at end-times
+	  mean.m_time[0] = m_time[n];
+	  mean.m_ice_volume.push_back(m_ice_volume[n]);
+	  mean.m_ice_vaf.push_back(m_ice_vaf[n]);
+	  mean.m_ice_grounded_area.push_back(m_ice_grounded_area[n]);
+	  mean.m_ice_floating_area.push_back(m_ice_floating_area[n]);
+	  
 	}
-      // state quantities are defined at end-times
-      mean.m_time[0] = m_time[n];
-      mean.m_ice_volume.push_back(m_ice_volume[n]);
-      mean.m_ice_vaf.push_back(m_ice_vaf[n]);
-      mean.m_ice_grounded_area.push_back(m_ice_grounded_area[n]);
-      mean.m_ice_floating_area.push_back(m_ice_floating_area[n]);
     }
-
   return mean_ptr;
 }
 
@@ -409,6 +440,7 @@ void DomainDiagnosticData::reset(int a_len)
      last_to_first_resize(m_ice_grounded_total_bmb);
      last_to_first_resize(m_ice_total_calving_flux);
      last_to_first_resize(m_ice_total_gl_flux);
+     last_to_first_resize(m_error_ice_mass_con);
    }
  else
    {
@@ -423,6 +455,7 @@ void DomainDiagnosticData::reset(int a_len)
      m_ice_grounded_total_bmb.resize(a_len);
      m_ice_total_calving_flux.resize(a_len);
      m_ice_total_gl_flux.resize(a_len);
+     m_error_ice_mass_con.resize(a_len);
    }
 }
 

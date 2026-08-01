@@ -136,6 +136,7 @@ class DomainDiagnosticData
   Vector<Real> m_ice_total_calving_flux; // total calving flux
   Vector<Real> m_ice_total_gl_flux; // total gl flux
   Vector<Real> m_ice_total_calving_and_ice_front_melting_flux; // total calving and ice front melting flux
+  Vector<Real> m_error_ice_mass_con;
 
   Real m_previous_time, m_previous_volume; // used for computing the calving rate
   
