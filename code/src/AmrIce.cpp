@@ -3013,8 +3013,10 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 	  // h = h_old + dh/dt * dt
 	  newH *= -1*a_dt;
           newH.plus(oldH, 0, 0, 1);
+
 	} // end loop over cells
       if (m_evolve_ice_frac) updateIceFrac(levelNewH, lev);
+
     } // end loop over levels
   
   
