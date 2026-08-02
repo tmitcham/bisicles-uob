@@ -3035,8 +3035,9 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 		      else
 			{
 			  remove = newH(iv);
-			  (*m_calvedIceThickness[lev])[dit](iv) += remove; // move to later
+			  
 			}
+		      (*m_calvedIceThickness[lev])[dit](iv) += remove; // move to later
 		    }
 		  else 
 		    {
