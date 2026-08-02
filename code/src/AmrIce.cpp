@@ -3020,7 +3020,8 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 	      FArrayBox& frac = (*m_iceFrac[lev])[dit];
 	      const FArrayBox& calved_frac = (*m_calvedIceArea[lev])[dit];
 	      Real frac_tol = TINY_FRAC;
-	      Real thk_tol = 1.0; // should be TINY_THICKNESS - but that is causing a termination in regression/plot_cf
+	      Real thk_tol = TINY_THICKNESS;
+		// 1.0; // should be TINY_THICKNESS - but that is causing a termination in regression/plot_cf
 	      for (BoxIterator bit(gridBox); bit.ok(); ++bit)
 	      	{
 	      	  const IntVect& iv = bit();
@@ -3028,24 +3029,27 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 		  if (newH(iv) > thk_tol)
 		    {
 		      if (frac(iv) > frac_tol)	
-			{
-			  if (calved_frac(iv) > frac_tol)
-			    {
+		      	{
 			      remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
-			    }
 			}
 		      else
 			{
-			  // frac < frac_tol  
 			  remove = newH(iv);
+			  (*m_calvedIceThickness[lev])[dit](iv) += remove; // move to later
 			}
 		    }
-		  else
+		  else 
 		    {
-		      remove = newH(iv);
+		      remove = std::max(0.0,newH(iv));// no adding ice this way
 		    }
-		    newH(iv) -= remove;
-		    (*m_calvedIceThickness[lev])[dit](iv) += remove;
+		  
+		  newH(iv) -= remove;
+		  
+		  // keeping things inline with previous versions
+		  // until I fix the plot-cf regression test
+		  if (newH(iv) < 1.0) newH(iv) = 0.0;
+		  //(*m_calvedIceThickness[lev])[dit](iv) += remove;
+		  
 		} // end loop over cells
 	    } // end if (m_evolve_ice_frac)
           
