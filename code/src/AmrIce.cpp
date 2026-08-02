@@ -3020,12 +3020,13 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 	      FArrayBox& frac = (*m_iceFrac[lev])[dit];
 	      const FArrayBox& calved_frac = (*m_calvedIceArea[lev])[dit];
 	      Real frac_tol = TINY_FRAC;
+	      Real thk_tol = 1.0; // should be TINY_THICKNESS - but that is causing a termination in regression/plot_cf
 	      for (BoxIterator bit(gridBox); bit.ok(); ++bit)
 	      	{
 	      	  const IntVect& iv = bit();
-		  if (newH(iv) > TINY_THICKNESS)
+		  Real remove(0.0);
+		  if (newH(iv) > thk_tol)
 		    {
-		      Real remove(0.0);
 		      if (frac(iv) > frac_tol)	
 			{
 			  if (calved_frac(iv) > frac_tol)
@@ -3038,10 +3039,13 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 			  // frac < frac_tol  
 			  remove = newH(iv);
 			}
-			    
-		      newH(iv) -= remove;
-		      (*m_calvedIceThickness[lev])[dit](iv) += remove;
 		    }
+		  else
+		    {
+		      remove = newH(iv);
+		    }
+		    newH(iv) -= remove;
+		    (*m_calvedIceThickness[lev])[dit](iv) += remove;
 		} // end loop over cells
 	    } // end if (m_evolve_ice_frac)
           
@@ -3183,8 +3187,8 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
       DisjointBoxLayout& levelGrids = m_amrGrids[lev];
       LevelSigmaCS& levelCoords = *(a_vect_coordSys_new[lev]);
       LevelData<FArrayBox>& levelH = levelCoords.getH();
-
-      updateIceFrac(levelH, lev);
+      LevelData<FArrayBox>& levelF = *m_iceFrac[lev];
+      //updateIceFrac(levelH, lev);
       
       DataIterator dit = levelGrids.dataIterator();
 
@@ -3194,6 +3198,9 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
           FORT_MAXFAB1(CHF_FRA(levelH[dit]), 
                        CHF_CONST_REAL(lim), 
                        CHF_BOX(levelH[dit].box()));
+	  FORT_MAXFAB1(CHF_FRA(levelF[dit]), 
+                       CHF_CONST_REAL(lim), 
+                       CHF_BOX(levelF[dit].box()));
         }
     }
 
@@ -4128,7 +4135,7 @@ AmrIce::updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level)
   // set ice fraction to 0 if no ice in cell...
 
   // "zero" thickness value
-  Real ice_eps = 1.0;
+  Real ice_eps = 1.0e-10;
   DataIterator dit = m_iceFrac[a_level]->dataIterator();
   for (dit.begin(); dit.ok(); ++dit)
     {
@@ -4141,7 +4148,7 @@ AmrIce::updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level)
 
 	  if (thisH(iv) < ice_eps)
 	    {
-	      //thisFrac(iv,0) = 0.0;
+	      thisFrac(iv,0) = 0.0;
 	      thisH(iv,0) = 0.0;
 	    }
 
@@ -4660,6 +4667,7 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
 	{
 	  (*unet[lev])[dit].copy((*m_calvingVelocity[lev])[dit]);	
 	  (*unet[lev])[dit] += (*m_velocity[lev])[dit];
+	 
 	}
     }
 
@@ -4672,13 +4680,22 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
       Real frac_cfl = m_amrDx[m_finest_level] / (uu + 1.0e-10);
       int n_sub = int(a_dt/frac_cfl) + 1;
       Real dt_sub = a_dt/Real(n_sub);
+      if (m_verbosity > 3)
+	  {
+	    pout() << "AmrIce::AdvectIceFrac2 : " << n_sub << " sub-cycles" << std::endl; 
+	  }
       for (int sub = 0; sub < n_sub; sub++)
-	PGAdvectFrac(a_iceFrac, unet, dt_sub, TINY_FRAC);
+	{
+	  PGAdvectFrac(a_iceFrac, unet, dt_sub, TINY_FRAC);
+	  updateInvalidIceFrac(a_iceFrac);
+	}
   }
-    
+
   {
     // enforce a_iceFrac <= frac_a : violated if v.u > u.u
       int violations = 0;
+      Real sum_viol = 0.0;
+      Real max_viol = 0.0;
       for (int lev = 0; lev <= m_finest_level; lev++)
 	  {	
 	    for (DataIterator dit(a_iceFrac[lev]->disjointBoxLayout()); dit.ok(); ++dit)
@@ -4688,9 +4705,12 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
 		    for (BoxIterator bit(f.box()); bit.ok(); ++bit)
 			{
 			    const IntVect& iv = bit();
-			    if (f(iv) > f_a(iv))
+			    if (f(iv) > f_a(iv) )
 				{
 				    violations++;
+				    Real viol = f(iv) - f_a(iv);
+				    sum_viol += viol;
+				    max_viol = std::max(viol, max_viol);
 				    f(iv) = f_a(iv);
 				}
 			}
@@ -4698,9 +4718,11 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
 	    a_iceFrac[lev]->exchange();
 	  }
 
-      if (m_verbosity > 0)
+      if ((m_verbosity > 0) && (violations > 0) )
 	  {
-	      pout() << "AmrIce::AdvectIceFrac2 : corrected " <<  violations << " cells where frac > frac_c (invalid calving rate)" << endl; 
+	      pout() << "AmrIce::AdvectIceFrac2 : corrected " <<  violations
+		     << " cells where frac > frac_a (invalid calving rate): total correction = "
+		     << sum_viol << " max correction = " << max_viol <<  endl; 
 	  }
   
     }

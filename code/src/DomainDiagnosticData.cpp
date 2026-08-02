@@ -356,9 +356,17 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
   
   for (int i = 0; i < m_cf_stuff.size(); i++)
     {
-      pout() << "DomainDiagnosticsData: "
-	     << m_cf_stuff[i].short_name << " =  " << (*m_cf_stuff[i].data)[nt] << " " << m_cf_stuff[i].units << std::endl;
-	     
+      pout() << "DomainDiagnosticsData: " << m_cf_stuff[i].short_name << " = ";
+      
+	if ( (m_cf_stuff[i].data) && (m_cf_stuff[i].data->size() > nt))
+	  {
+	    pout() << (*m_cf_stuff[i].data)[nt] ;
+	  }
+	else
+	  {
+	    pout() << " ??? ";
+	  }
+      pout() << " " << m_cf_stuff[i].units << std::endl;
     }
   
 }
@@ -661,7 +669,7 @@ void DomainDiagnosticData::write(HDF5Handle& a_handle)
 	{     
 	  for (int i = 0; i < m_cf_stuff.size(); ++i)
 	    {
-	      cfDiagnostic cf_info = m_cf_stuff[i];
+	      cfDiagnostic& cf_info = m_cf_stuff[i];
 	      writeStruct(a_handle,cf_info);
 	    }
 	  a_handle.popGroup();
@@ -675,9 +683,16 @@ void DomainDiagnosticData::read(HDF5Handle& a_handle)
     {
       for (int i = 0; i < m_cf_stuff.size(); ++i)
 	{
-	  cfDiagnostic cf_info = m_cf_stuff[i];
+	  cfDiagnostic& cf_info = m_cf_stuff[i];
 	  readStruct(a_handle,cf_info);
 	}
+      for (int i = 1; i < m_cf_stuff.size(); ++i)
+	{
+	  // this should be the case already, but old checkpoints abound...
+	  m_cf_stuff[i].data->resize(m_cf_stuff[0].data->size());
+	}
+      
+      
       a_handle.popGroup();
     }
 }
