@@ -962,19 +962,9 @@ AmrIce::writeAMRPlotFile()
 	  if (m_write_thickness_sources)
 	    {
 	      thisPlotData.copy((*m_basalThicknessSource[lev])[dit], 0, comp, 1);
-	      if (m_frac_sources)
-		{
-		  thisPlotData.mult( (*m_iceFrac[lev])[dit],0,comp,1);
-		}
 	      comp++;
-		  
-	 
+	      
 	      thisPlotData.copy((*m_surfaceThicknessSource[lev])[dit], 0, comp, 1);
-	      if (m_frac_sources)
-		{
-		  // scale by ice fraction
-		  thisPlotData.mult( (*m_iceFrac[lev])[dit],0,comp,1);
-		}
 	      comp++;
 
 	      if (!m_reduced_plot)

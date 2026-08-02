@@ -3013,47 +3013,8 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 	  // h = h_old + dh/dt * dt
 	  newH *= -1*a_dt;
           newH.plus(oldH, 0, 0, 1);
-
-	  if (m_evolve_ice_frac)
-	    {
-	      //remove calved area.
-	      FArrayBox& frac = (*m_iceFrac[lev])[dit];
-	      const FArrayBox& calved_frac = (*m_calvedIceArea[lev])[dit];
-	      Real frac_tol = TINY_FRAC;
-	      Real thk_tol = TINY_THICKNESS;
-		// 1.0; // should be TINY_THICKNESS - but that is causing a termination in regression/plot_cf
-	      for (BoxIterator bit(gridBox); bit.ok(); ++bit)
-	      	{
-	      	  const IntVect& iv = bit();
-		  Real remove(0.0);
-		  if (newH(iv) > thk_tol)
-		    {
-		      if (frac(iv) > frac_tol)	
-		      	{
-			      remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
-			}
-		      else
-			{
-			  remove = newH(iv);
-			  (*m_calvedIceThickness[lev])[dit](iv) += remove; // move to later
-			}
-		    }
-		  else 
-		    {
-		      remove = std::max(0.0,newH(iv));// no adding ice this way
-		    }
-		  
-		  newH(iv) -= remove;
-		  
-		  // keeping things inline with previous versions
-		  // until I fix the plot-cf regression test
-		  if (newH(iv) < 1.0) newH(iv) = 0.0;
-		  //(*m_calvedIceThickness[lev])[dit](iv) += remove;
-		  
-		} // end loop over cells
-	    } // end if (m_evolve_ice_frac)
-          
-        } // end loop over grids 
+	} // end loop over cells
+      if (m_evolve_ice_frac) updateIceFrac(levelNewH, lev);
     } // end loop over levels
   
   
@@ -3206,9 +3167,14 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
                        CHF_CONST_REAL(lim), 
                        CHF_BOX(levelF[dit].box()));
         }
-    }
-
+    
+      if (!(m_evolve_ice_frac))
+	{
+	  // might as well keep this frac sane
+	  setIceFrac(levelH, lev);
+	}
   
+    }
   
   //average from the finest level down
   for (int lev =  finestTimestepLevel() ; lev > 0 ; lev--)
@@ -4136,28 +4102,41 @@ AmrIce::setIceFrac(const LevelData<FArrayBox>& a_thickness, int a_level)
 void
 AmrIce::updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level)
 {
-  // set ice fraction to 0 if no ice in cell...
-
-  // "zero" thickness value
-  Real ice_eps = 1.0e-10;
-  DataIterator dit = m_iceFrac[a_level]->dataIterator();
-  for (dit.begin(); dit.ok(); ++dit)
-    {
-      FArrayBox& thisFrac = (*m_iceFrac[a_level])[dit];
-      FArrayBox& thisH = a_thickness[dit];
-      BoxIterator bit(thisFrac.box());
-      for (bit.begin(); bit.ok(); ++bit)
-        {
-          IntVect iv = bit();
-
-	  if (thisH(iv) < ice_eps)
-	    {
-	      thisFrac(iv,0) = 0.0;
-	      thisH(iv,0) = 0.0;
-	    }
-
-        }
-    }
+ DataIterator dit = m_iceFrac[a_level]->dataIterator();
+ for (dit.begin(); dit.ok(); ++dit)
+   {
+     FArrayBox& newH = a_thickness[dit];
+     FArrayBox& frac = (*m_iceFrac[a_level])[dit];
+     const FArrayBox& calved_frac = (*m_calvedIceArea[a_level])[dit];
+     Real frac_tol = TINY_FRAC;
+     Real thk_tol = TINY_THICKNESS;
+     const Box& box = m_amrGrids[a_level][dit];
+     for (BoxIterator bit(box); bit.ok(); ++bit)
+       {
+	 const IntVect& iv = bit();
+	 Real remove(0.0);
+	 if (newH(iv) > thk_tol)
+	   {
+	     if (frac(iv) > frac_tol)	
+	       {
+		 remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
+	       }
+	     else
+	       {
+		 remove = newH(iv);
+	       }
+	   }
+	 else 
+	   {
+	     remove = newH(iv);// no adding ice this way
+	   }
+	 remove = std::max(0.0,remove);
+	 //calve
+	 newH(iv) -= remove;
+	 //record the calving
+	 (*m_calvedIceThickness[a_level])[dit](iv) += remove;
+       } // end loop over cells
+   } // end loop over grids
 }
 
 /// update covered cells, ghost cells etc, of a_iceFrac
