@@ -4489,6 +4489,7 @@ void AmrIce::PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
 	  const FluxBox& f =  (*fHalf[lev])[dit];
 	  //FC const FluxBox& u = (*a_u[lev])[dit];
 	  const FArrayBox& u = (*a_u[lev])[dit];
+	  const FArrayBox& h = levelH[dit];
 	  const Box& box = grids[dit];
 	  FArrayBox dF(box, 1);
 	  dF.setVal(0.0);
@@ -4498,11 +4499,11 @@ void AmrIce::PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
 	      for (int dir = 0; dir < SpaceDim; dir++)
 		{
 		  Real v = u(iv,dir);
-		  if (levelH[dit](iv) < TINY_THICKNESS)
+		  if (h(iv) < TINY_THICKNESS)
 		  {
 		     // u == 0 not valid in ice free regions - try neighbours
-		     v = 0.5 * (u(iv - BASISV(dir)) + u(iv + BASISV(dir)));
-     		     v = (v > 0)?u(iv - BASISV(dir)):u(iv + BASISV(dir));		     
+		    v = 0.5 * (u(iv - BASISV(dir),dir) + u(iv + BASISV(dir),dir));
+		    v = (v > 0)?u(iv - BASISV(dir),dir):u(iv + BASISV(dir),dir); 
 		  }	  
 		  dF(iv) -= a_dt / dx[dir] * v
 		    * (f[dir](iv + BASISV(dir)) - f[dir](iv));
