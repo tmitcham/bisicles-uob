@@ -1,4 +1,4 @@
-main.poutBaseName=pout.cyl.
+main.poutBaseName=pout.cyl
 
 #domain details
 main.domain_size = 1280000.0 1280000.0 1.0e+3
@@ -32,8 +32,6 @@ PythonBasalFriction.function = constfriction
 BasalFrictionPowerLaw.m = 0.333
 BasalFrictionPowerLaw.includeEffectivePressure = false
 
-amr.grounding_line_subdivision = 4
-
 #physical constants
 constants.ice_density=918.0
 constants.sea_water_density=1028.0
@@ -44,12 +42,9 @@ surfaceFlux.function = acab
 amr.mask_sources = true
 basalFlux.type = zeroFlux
 
-
-
-
 CalvingModel.type = RateAuBuhatCalvingModel
 CalvingModel.proportion.type = pythonFlux
-CalvingModel.proportion.function = fsrs
+CalvingModel.proportion.function = fsrs # free, steady, retreat, steady
 CalvingModel.proportion.module = cylinder
 CalvingModel.front_lo = 1 1
 CalvingModel.front_hi = 1 1
@@ -63,15 +58,15 @@ PythonVelocitySolver.module = cylinder
 PythonVelocitySolver.function = velocity
 
 #time stepping
-main.maxTime = 50.0  # maximum time to run to
-main.maxStep = 10000   # maximum number of steps to runx
+main.maxTime = 20.0  # maximum time to run to
+main.maxStep = 20   # maximum number of steps to runx
 amr.temporal_accuracy = 1
 amr.cfl = 0.25
 amr.initial_cfl = 0.25
-amr.fixed_dt = 1.0
+amr.fixed_dt = 2.0
 
 #plotting options
-amr.plot_interval = 1
+amr.plot_interval = 2
 amr.plot_prefix = plot.cyl.
 amr.check_prefix = chk.cyl.
 
@@ -79,14 +74,13 @@ amr.check_prefix = chk.cyl.
 amr.plot_style_cf = true
 CFIO.lithk = true
 CFIO.lithk.time_integration = 1
-CFIO.licavlf = true
-
+CFIO.licalvf = true
 
 amr.write_mask = true
 amr.write_thickness_sources = true
 
 #check points
-amr.check_interval = 7
+amr.check_interval = -777 # no need to write checkpoinst
 amr.check_overwrite = 0
 amr.verbosity = 5
 
@@ -116,8 +110,12 @@ amr.verbosity = 5
 amr.velocity_solve_interval = 1
 
 amr.eliminate_remote_ice = false
-
 amr.evolve_ice_frac_2 = true
 
+#test conditions
+DomainDiagnosticData.max_err_mass_con = 100.0 # kg/yr
 
-
+regression.result_hdf5 = plot.cyl.000008.CF.2d.hdf5
+regression.reference_hdf5 = plot.cyl.000008.CF.2d.H5
+regression.tol = 1.0e-5
+#regression.diff_hdf5 = plot.cf_regression.diff.CF.2d.hdf5

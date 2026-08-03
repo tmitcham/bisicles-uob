@@ -6,6 +6,7 @@ rf = 256.0e+3
 H = 1000.0
 D = -500.0
 umax = 500.0
+T = 4.0
 
 def get_r(x,y):
     return sqrt((x-L)**2+(y-L)**2)
@@ -31,25 +32,26 @@ def topography(x,y):
 def constfriction(x,y,t,thck,topg):
     return 1.0e+4
 
-def acab(x,y,*etc):
+def acab(x,y,t,thk,*etc):
+    a = 0.0
     r = get_r(x,y)
-    a = 2*H*umax/rf
-    a = 0.3
+    #a = 2*H*umax/rf
+    if thk > 0.0 : 
+        a = 0.12345
     #if ((x-L)**2 + (y-L)**2) > rf**2:
     #    return -1000000.0
     return a
 
 def fsrs(x,y,t,*etc):
     
-    uc = 0.0
-    if (t >= 10.0):
+    uc = 0.0 # free
+    if (t >= 1.0*T):
         uc = 1.0 # steady
-    if (t >= 20.0):
+    if (t >= 2.0*T):
         uc = 2.0 # retreat
-    if (t >= 30.0):
+    if (t >= 3.0*T):
         uc = 1.0 # steady
-    if (t >= 40.0):
-        uc = 0.0 # free advance
-
+    if (t >= 4.0*T):
+        uc = 0.0 # free
     return uc
 

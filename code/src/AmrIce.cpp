@@ -2382,7 +2382,6 @@ AmrIce::run(Real a_max_time, int a_max_step)
 	  timeStep(dt);
 
 	  //update CF data time-means and diagnostics
-	  
 	  if (m_plot_style_cf) accumulateCFData(dt);	  
 	} // end of plot_time_interval
 #ifdef CH_USE_HDF5
@@ -2443,14 +2442,6 @@ AmrIce::timeStep(Real a_dt)
   // assuming that we've already computed the current velocity 
   // field, most likely at initialization or at the end of the last timestep...
   // so, we don't need to recompute the velocity at the start.
-
-  setToZero(m_calvedIceArea);
-  // update ice fraction through advection
-  if (m_evolve_ice_frac)
-    {
-      advectIceFrac(m_iceFrac, m_faceVelAdvection, a_dt);
-    }
-
 
   // copy thickness into old thickness   
   for (int lev=0; lev <= m_finest_level ; lev++)
@@ -2514,8 +2505,16 @@ AmrIce::timeStep(Real a_dt)
       levelOldThickness.exchange();
       // do we need to also do a coarseAverage for the vel here?
     }
-
+  
+  setToZero(m_calvedIceArea);
+  // update ice fraction through advection
+  if (m_evolve_ice_frac)
+    {
+      advectIceFrac(m_iceFrac, m_faceVelAdvection, a_dt);
+    }
+  // thickness sources (depend on iceFrac.)
   computeThicknessSources(a_dt);
+  
   // compute face-centered thickness (H) at t + dt/2
   computeH_half(H_half, m_old_thickness,  a_dt);
   
@@ -3019,8 +3018,7 @@ AmrIce::updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new
 
     } // end loop over levels
   
-  
-  
+ 
   //include any diffusive fluxes
   if (m_evolve_thickness && m_diffusionTreatment == IMPLICIT)
     {
@@ -4104,41 +4102,47 @@ AmrIce::setIceFrac(const LevelData<FArrayBox>& a_thickness, int a_level)
 void
 AmrIce::updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level)
 {
- DataIterator dit = m_iceFrac[a_level]->dataIterator();
- for (dit.begin(); dit.ok(); ++dit)
-   {
-     FArrayBox& newH = a_thickness[dit];
-     FArrayBox& frac = (*m_iceFrac[a_level])[dit];
-     const FArrayBox& calved_frac = (*m_calvedIceArea[a_level])[dit];
-     Real frac_tol = TINY_FRAC;
-     Real thk_tol = TINY_THICKNESS;
-     const Box& box = m_amrGrids[a_level][dit];
-     for (BoxIterator bit(box); bit.ok(); ++bit)
-       {
-	 const IntVect& iv = bit();
-	 Real remove(0.0);
-	 if (newH(iv) > thk_tol)
-	   {
-	     if (frac(iv) > frac_tol)	
-	       {
+  Real a(0.0), b(0.0), c(0.0);
+  int aa(0), bb(0), cc(0);
+  DataIterator dit = m_iceFrac[a_level]->dataIterator();
+  for (dit.begin(); dit.ok(); ++dit)
+    {
+      FArrayBox& newH = a_thickness[dit];
+      FArrayBox& frac = (*m_iceFrac[a_level])[dit];
+      const FArrayBox& calved_frac = (*m_calvedIceArea[a_level])[dit];
+      Real frac_tol =  TINY_FRAC;
+      Real thk_tol = TINY_THICKNESS;
+      const Box& box = m_amrGrids[a_level][dit];
+      for (BoxIterator bit(box); bit.ok(); ++bit)
+	{
+	  const IntVect& iv = bit();
+	  Real remove(0.0);
+	  // if (newH(iv) > thk_tol)
+	  //   {
+	      if (frac(iv) > frac_tol)	
+		{
 		 remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
-	       }
-	     else
-	       {
-		 remove = newH(iv);
-	       }
-	   }
-	 else 
-	   {
-	     remove = newH(iv);// no adding ice this way
-	   }
-	 remove = std::max(0.0,remove);
-	 //calve
-	 newH(iv) -= remove;
-	 //record the calving
-	 (*m_calvedIceThickness[a_level])[dit](iv) += remove;
-       } // end loop over cells
-   } // end loop over grids
+		}
+	      else
+		{
+		  remove = newH(iv);
+		}
+	  //   }
+	  // else 
+	  //   {
+	  //     remove = newH(iv);
+	  //   }
+	  remove = std::max(0.0,remove); // no adding ice this way
+	  //calve
+	  newH(iv) -= remove;
+	  //record the calving
+	  (*m_calvedIceThickness[a_level])[dit](iv) += remove;
+	} // end loop over cells
+    } // end loop over grids
+  Real sum_remove = computeSum(m_calvedIceThickness,  m_refinement_ratios,
+			       m_amrDx[0], Interval(0,0), 0);
+  sum_remove += 0.0;
+  
 }
 
 /// update covered cells, ghost cells etc, of a_iceFrac
@@ -4400,7 +4404,7 @@ class NCAdvectPhysics : public AdvectPhysics
 
 void AmrIce::PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
 			  const Vector<LevelData<FArrayBox>* >&a_u,
-			  Real a_dt, Real a_tol)
+			  Real a_dt)
 {
   
   // Use the patch godunov methods to evolve f.
@@ -4514,81 +4518,6 @@ void AmrIce::PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
   
 }
 
-void CompressFront(Vector<LevelData<FArrayBox>* >& a_iceFrac,
-		   const Vector<LevelData<FArrayBox>* >& a_iceFracPrev,
-		   int a_finestLevel, int a_time_step)
-{
-  // Various cheap front compression methods
-  
-  Real frac_compress_lo = TINY_FRAC;
-  Real frac_compress_hi = 1.0 - TINY_FRAC;
-  int frac_compress_hard_interval = -1;
-  int frac_compress_type = 0;
-  bool frac_compress_surround = false;
-  
-  ParmParse pp("amr");
-  pp.query("frac_compress_lo",frac_compress_lo);
-  pp.query("frac_compress_hi",frac_compress_hi);
-  pp.query("frac_compress_type", frac_compress_type);
-  pp.query("frac_compress_hard_interval",frac_compress_hard_interval);
-  pp.query("frac_compress_surround",frac_compress_surround);
-  
-  // hard compression implies  values for the other parameters
-  bool hard_compress =  (frac_compress_hard_interval > 0) &&
-    (a_time_step%frac_compress_hard_interval == 0);
-  
-  if (hard_compress)
-    {
-      frac_compress_lo = 0.5 - TINY_FRAC;
-      frac_compress_hi = 0.5 + TINY_FRAC;
-      frac_compress_type = 1;
-    }
-
-  for (int lev = 0; lev <= a_finestLevel; lev++)
-    {
-      LevelData<FArrayBox>& levelF = *a_iceFrac[lev];
-      const LevelData<FArrayBox>& levelFo = *a_iceFracPrev[lev];
-      const DisjointBoxLayout& grids = levelF.getBoxes();
-     
-      for (DataIterator dit(grids); dit.ok(); ++dit)
-	{
-	  FArrayBox& f = levelF[dit];
-	  const FArrayBox& fo = levelFo[dit];
-	  for (BoxIterator bit(grids[dit]); bit.ok(); ++bit)
-	    {
-	      IntVect iv = bit(); 
-	      if (frac_compress_type == 1)
-		{
-		  if (f(iv,0) > frac_compress_hi) f(iv,0) = 1.0;
-		  else if (f(iv,0) < frac_compress_lo) f(iv,0) = 0.0;
-		} // end (frac_compress_type = 1)
-	      else if (frac_compress_type == 2)
-		{
-		  Real empty = frac_compress_lo;
-		  Real full = frac_compress_hi;
-		  if ( (f(iv) < fo(iv)) && (f(iv) < frac_compress_lo) ) f(iv) = 0.0;
-		  else if ( (f(iv) > fo(iv)) && (f(iv) > frac_compress_hi)) f(iv) = 1.0;
-		} // end (frac_compress_type == 2)
-
-	      // kluge: increase frac in any cell that was surrounded by part full cells.
-	      // attempt to avoid a corner case where some empty cells never
-	      // fill despite being confluences
-	      if (frac_compress_surround)
-		{
-		  Real f_min = 1.0;
-		  for (int dir = 0; dir < SpaceDim; dir++)
-		    {
-		      f_min = std::min(f_min, fo(iv+BASISV(dir)));
-		      f_min = std::min(f_min, fo(iv-BASISV(dir)));
-		    }
-		  f(iv) = std::max(f(iv),f_min);
-		}
-	    } // end for (BoxIterator
-	} // end for (DataIterator 
-    } // end  for (int lev = 0;  
-}
-
-
 void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
                       const Vector<LevelData<FluxBox>* >& a_faceVelAdvection,
                       Real a_dt)
@@ -4597,8 +4526,10 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
   // f is not conserved: the eqn is df/dt + (u + uc). grad(f) = 0
   // i.e df/dt = - div((u + uc)f) + f div(u + uc).
   // uc is the calving vector.
-  
-  pout() << " AmrIce::advectIceFrac2 " << std::endl;
+  if (m_verbosity > 3) 
+    {
+      pout() << "AmrIce::advectIceFrac2" << std::endl;
+    }
 
   updateInvalidIceFrac(a_iceFrac);
 
@@ -4621,7 +4552,7 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
     }
 
   // non-conservative (because div u != 0) advection
-  PGAdvectFrac(frac_a, m_velocity, a_dt, TINY_FRAC);
+  PGAdvectFrac(frac_a, m_velocity, a_dt);
   updateInvalidIceFrac(frac_a);
   
   // u + uc (ice velocity + calving velocity = - rate * calving dir)
@@ -4665,13 +4596,13 @@ void AmrIce::advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
       Real frac_cfl = m_amrDx[m_finest_level] / (uu + 1.0e-10);
       int n_sub = int(a_dt/frac_cfl) + 1;
       Real dt_sub = a_dt/Real(n_sub);
-      if (m_verbosity > 3)
+      if (m_verbosity > 4)
 	  {
 	    pout() << "AmrIce::AdvectIceFrac2 : " << n_sub << " sub-cycles" << std::endl; 
 	  }
       for (int sub = 0; sub < n_sub; sub++)
 	{
-	  PGAdvectFrac(a_iceFrac, unet, dt_sub, TINY_FRAC);
+	  PGAdvectFrac(a_iceFrac, unet, dt_sub);
 	  updateInvalidIceFrac(a_iceFrac);
 	}
   }

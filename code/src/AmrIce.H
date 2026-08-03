@@ -725,13 +725,10 @@ protected:
                      Real a_dt);
   
   /// Ice fraction *non-conservative* advection  df/dt + u. grad(f) = 0
-  /**
-     enforce df/dt = 0 where |grad(f)| > a_ tol
-  */
   void PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
 		    //FC const Vector<LevelData<FluxBox>* >& a_u,
 		    const Vector<LevelData<FArrayBox>* >& a_u,
-		Real a_dt, Real a_tol);
+		    Real a_dt);
   
   /// update real-valued ice fraction through advection from neighboring cells
   void advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
