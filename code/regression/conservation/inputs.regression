@@ -1,4 +1,4 @@
-main.poutBaseName=pout.cyl
+#main.poutBaseName=pout.cyl
 
 #domain details
 main.domain_size = 1280000.0 1280000.0 1.0e+3
