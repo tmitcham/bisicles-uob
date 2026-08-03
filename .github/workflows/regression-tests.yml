@@ -72,7 +72,7 @@ jobs:
           cd $GITHUB_WORKSPACE/code/regression/conservation/
           ${{ env.bike }} inputs.regression
           egrep 'HDF5|DomainDiagnosticData' pout.0
-	  
+ 
     - name: plot-cf test
       continue-on-error: true
       run: | 
