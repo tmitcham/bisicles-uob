@@ -60,14 +60,14 @@ jobs:
             CHOMBO_HOME=$PWD/../../Chombo/lib make all OPT=TRUE MPI=TRUE -j4
 
     - name: twisty stream test
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/twistyStream/
           ${{ env.bike }} inputs.regression
           egrep 'HDF5|rank' pout.0
 
     - name: conservation test
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/conservation/
           export PYTHONPATH=$PYTHONPATH:$PWD
@@ -75,7 +75,7 @@ jobs:
           egrep 'HDF5|DomainDiagnosticData' pout.0
  
     - name: plot-cf test
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/plot-cf/
           ${{ env.bike }} inputs.regression
@@ -83,14 +83,14 @@ jobs:
 
 
     - name: ASE-Control test
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/ASE-control/
           ${{ env.bike }} inputs.regression
           egrep 'CG|secant|HDF5' pout.0
 
     - name: ASE-Control test (checkpoints)
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/ASE-control/
           ${{ env.bike }} inputs.sequence_regression
@@ -99,7 +99,7 @@ jobs:
           egrep 'CG|secant|HDF5' pout.0
 
     - name: ASE-Control test (CG continuation)
-      continue-on-error: true
+      continue-on-error: false
       run: | 
           cd $GITHUB_WORKSPACE/code/regression/ASE-control/
           ${{ env.bike }} inputs.midCG_init
