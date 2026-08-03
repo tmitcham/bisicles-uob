@@ -4110,28 +4110,28 @@ AmrIce::updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level)
       FArrayBox& newH = a_thickness[dit];
       FArrayBox& frac = (*m_iceFrac[a_level])[dit];
       const FArrayBox& calved_frac = (*m_calvedIceArea[a_level])[dit];
-      Real frac_tol =  TINY_FRAC;
-      Real thk_tol = TINY_THICKNESS;
+      Real frac_tol = TINY_FRAC;
+      Real thk_tol = 1.0; //TINY_THICKNESS;
       const Box& box = m_amrGrids[a_level][dit];
       for (BoxIterator bit(box); bit.ok(); ++bit)
 	{
 	  const IntVect& iv = bit();
 	  Real remove(0.0);
-	  // if (newH(iv) > thk_tol)
-	  //   {
+	  if (newH(iv) > thk_tol)
+	    {
 	      if (frac(iv) > frac_tol)	
 		{
-		 remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
+		  remove = newH(iv) * calved_frac(iv)/(frac(iv) + calved_frac(iv));
 		}
 	      else
 		{
 		  remove = newH(iv);
 		}
-	  //   }
-	  // else 
-	  //   {
-	  //     remove = newH(iv);
-	  //   }
+	    }
+	  else 
+	    {
+	      remove = newH(iv);
+	    }
 	  remove = std::max(0.0,remove); // no adding ice this way
 	  //calve
 	  newH(iv) -= remove;
