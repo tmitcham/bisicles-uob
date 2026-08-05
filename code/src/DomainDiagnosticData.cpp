@@ -336,12 +336,12 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
   m_ice_vaf.push_back(rhoi*sumScalar(hab, ice));
   m_ice_grounded_area.push_back(sumScalar(frac, grounded));
   m_ice_floating_area.push_back(sumScalar(frac, floating));
-  m_ice_total_smb.push_back(rhoi*sumScalar(smb, ice));
-  m_ice_total_bmb.push_back(rhoi*sumScalar(bmb, ice));
+  m_ice_total_smb.push_back(rhoi*sumScalar(smb, entire));
+  m_ice_total_bmb.push_back(rhoi*sumScalar(bmb, entire));
   m_ice_floating_total_bmb.push_back(rhoi*sumScalar(bmb, floating));
   m_ice_grounded_total_bmb.push_back(rhoi*sumScalar(bmb, grounded));
   m_ice_total_calving_flux.push_back(-rhoi/a_amrIce.dt()*sumScalar(cfluxdt, entire));
-  m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, grounded));
+  m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, entire)); 
 
   int nt = m_time.size() - 1;
   Real err_mass_con = 0.0;
@@ -362,10 +362,11 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
       if ( (m_cf_stuff[i].data) && (m_cf_stuff[i].data->size() > nt))
 	{
 	  pout() << "DomainDiagnosticData: "
-		 "time = " << m_time[nt] << " "
+	    "time = " << std::fixed << std::setprecision(3) << m_time[nt] << " "
 		 << m_cf_stuff[i].short_name << " = "
-		 << std::setprecision(12)  
+		 << std::setprecision(12)  << std::scientific
 		 << (*m_cf_stuff[i].data)[nt] << " "
+		 << std::defaultfloat
 		 << m_cf_stuff[i].units << std::endl; 
 	}      
     }
