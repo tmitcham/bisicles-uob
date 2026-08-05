@@ -2433,8 +2433,10 @@ AmrIce::timeStep(Real a_dt)
   if (m_verbosity >=2) 
     {
       pout() << "Timestep " << m_cur_step 
-             << " Advancing solution from time " 
-             << m_time << " ( " << time() << ")" " with dt = " << a_dt << endl;
+             << " Advancing solution from time "
+	     << std::defaultfloat
+             << m_time << " ( " << time() << ")" " with dt = " << a_dt 
+	     << endl;
     }
 
   m_dt = a_dt;
@@ -2627,11 +2629,10 @@ AmrIce::timeStep(Real a_dt)
     {
       pout () << "AmrIce::timestep " << m_cur_step
               << " --     end time = " 
-	      << setiosflags(ios::fixed) << setprecision(6) << setw(12)
+	      << std::defaultfloat
               << m_time  << " ( " << time() << " )"
               << ", dt = " 
               << a_dt
-	      << resetiosflags(ios::fixed)
               << endl;
     }
 
@@ -2657,6 +2658,21 @@ AmrIce::timeStep(Real a_dt)
     }
 }
 
+void de_nan(FArrayBox& a)
+{
+  for (int k = 0; k < a.nComp(); k++)
+    {
+      for (BoxIterator bit(a.box()); bit.ok(); ++bit)
+	{
+	  const IntVect& iv = bit();
+	  if (std::isnan(a(iv,k)))
+	    {
+	      a(iv,k) = 0.0;
+	    }
+	}
+    }
+}
+
 // update surface and basal thickness sources
 void
 AmrIce::computeThicknessSources(Real a_dt)
@@ -2676,6 +2692,12 @@ AmrIce::computeThicknessSources(Real a_dt)
 	  (*m_basalThicknessSource[lev])[dit] *= (*m_iceFrac[lev])[dit];
 	}
       }
+
+      for ( DataIterator dit(m_amrGrids[lev]); dit.ok(); ++dit)
+	{
+	  de_nan( (*m_surfaceThicknessSource[lev])[dit]);
+	  de_nan( (*m_surfaceThicknessSource[lev])[dit]);
+	}
     }
 }
 
