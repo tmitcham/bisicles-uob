@@ -4148,6 +4148,7 @@ AmrIce::applyCalvingRate(CalvingModel::Stage a_stage)
 	     << std::setprecision(6)  << std::scientific
 	     << calved_volume - calved_volume_0
 	     << " of current calved volume " << calved_volume  
+	     << " (stage " << a_stage << ")"
 	     << std::endl;  
     }
   
@@ -5448,7 +5449,8 @@ void AmrIce::applyCalvingCriterion(CalvingModel::Stage a_stage)
       pout() << "AmrIce::applyCalvingCriterion total vol removed "
 	     << std::setprecision(6)  << std::scientific
 	     << calved_volume - calved_volume_0
-	     << " of current calved volume " << calved_volume  
+	     << " of current calved volume " << calved_volume
+	     << " (stage " << a_stage << ")"
 	     << std::endl;  
     }
   
@@ -5472,7 +5474,10 @@ void AmrIce::eliminateRemoteIce()
   
   //any thickness change in eliminateRemoteIce is assumed to be calving: observers may care
   notifyObservers(Observer::PreCalving);
-  
+ 
+  Real calved_volume_0 = computeSum(m_calvedIceThickness,  m_refinement_ratios,
+			       m_amrDx[0], Interval(0,0), 0);
+
   IceUtility::eliminateRemoteIce(m_vect_coordSys, m_velocity, 
 				 m_calvedIceThickness, m_addedIceThickness,
 				 m_removedIceThickness,
@@ -5481,6 +5486,18 @@ void AmrIce::eliminateRemoteIce()
 				 m_finest_level, m_eliminate_remote_ice_max_iter,
 				 m_eliminate_remote_ice_tol,m_verbosity);
 
+
+  Real calved_volume = computeSum(m_calvedIceThickness,  m_refinement_ratios,
+			       m_amrDx[0], Interval(0,0), 0);
+  if (m_verbosity > 3)
+    {
+      pout() << "AmrIce::eliminateRemoteIce total vol removed "
+	     << std::setprecision(6)  << std::scientific
+	     << calved_volume - calved_volume_0
+	     << " of current calved volume " << calved_volume  
+	     << std::endl;  
+    }
+ 
   //any thickness change in eliminateRemoteIce is assumed to be calving: observers may care
   notifyObservers(Observer::PostCalving);
   
