@@ -234,8 +234,7 @@ public:
   Vector<RefCountedPtr<LevelSigmaCS> > copyGeometry();
   
   // update ice thickness *and* bedrock elevation
-  void updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new, 
-                       Vector<RefCountedPtr<LevelSigmaCS> >& a_vectCoords_old, 
+  void updateGeometry( Vector<RefCountedPtr<LevelSigmaCS> >& a_vectCoords_old, 
                        const Vector<LevelData<FluxBox>* >& a_vectFluxes, 
                        Real a_dt);
   
@@ -708,14 +707,7 @@ protected:
    */
   void setIceFrac(const LevelData<FArrayBox>& a_thickness, int a_level);
 
-
-  /// update real-valued ice fraction after thickness update 
-  /** this is different from setIceFrac in that it preserves 
-      fractional values, but still sets values to zero in cells 
-      with no ice. Thickness is non-const because it may set very small
-      values of H (less than epsilon) to zero
-   */
-  void updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level);
+  
 
   void setIceFracBC(LevelData<FArrayBox>& a_iceFrac, const ProblemDomain& a_domain);
   
@@ -769,7 +761,11 @@ protected:
 				   const Vector<LevelData<FArrayBox>* >& a_bts,
 				   const Vector<LevelData<FArrayBox>* >& a_vts
 				   );
-  
+
+  // remove ice that calves according to a calving rate (calved area)
+  void applyCalvingRate(CalvingModel::Stage a_stage);
+
+  // remove ice that calves according to a criterion
   void applyCalvingCriterion(CalvingModel::Stage a_stage);
   
   void eliminateRemoteIce();
