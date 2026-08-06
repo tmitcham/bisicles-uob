@@ -68,6 +68,8 @@ void MelangeIceObserver::notify(AmrIce::Observer::Notification a_n, AmrIce& a_am
   else if (a_n == AmrIce::Observer::PreCalving)
     {
       CH_assert(MelangeIceObserver::m_next_increment_positive);
+       m_melangePtr->define(a_amrIce.grids(), a_amrIce.refRatios(),
+			    a_amrIce.finestLevel(), a_amrIce.dx(0));
       m_next_increment_positive = false;
       m_melangePtr->increment(a_amrIce, 1.0);
     }
