@@ -813,7 +813,7 @@ CalvingModel::updateCalvedIce(const Real& a_thck, const Real a_prevThck, const i
 	}
       else
 	{
-	  a_removed += (a_prevThck-a_thck);
+	  a_calved += (a_prevThck-a_thck);
 	}
     } 
 

@@ -254,8 +254,7 @@ void DomainDiagnosticData::setCFdata()
   cf_info.units = "kg yr^-1";
   cf_info.data = &m_error_ice_mass_con;
   m_cf_stuff.push_back(cf_info);
-
-
+ 
 }
 
 
@@ -307,7 +306,7 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
     }
   Vector<LevelData<FArrayBox>* >& smb = a_amrIce.m_surfaceThicknessSource;
   Vector<LevelData<FArrayBox>* >& bmb = a_amrIce.m_basalThicknessSource;
-  Vector<LevelData<FArrayBox>* >& cflux = a_amrIce.m_calvedIceThickness;
+  Vector<LevelData<FArrayBox>* >& cfluxdt = a_amrIce.m_calvedIceThickness;
   Vector<LevelData<FArrayBox>* >& glflux = a_amrIce.m_fluxGL;
   Vector<LevelData<FArrayBox>* >& frac = a_amrIce.m_iceFrac;
   
@@ -333,40 +332,51 @@ void DomainDiagnosticData::record(AmrIce& a_amrIce)
 		   };
 
   m_time.push_back(a_amrIce.time());
-  m_ice_volume.push_back(rhoi*sumScalar(thk, ice));
+  m_ice_volume.push_back(rhoi*sumScalar(thk, entire));
   m_ice_vaf.push_back(rhoi*sumScalar(hab, ice));
   m_ice_grounded_area.push_back(sumScalar(frac, grounded));
   m_ice_floating_area.push_back(sumScalar(frac, floating));
-  m_ice_total_smb.push_back(rhoi*sumScalar(smb, ice));
-  m_ice_total_bmb.push_back(rhoi*sumScalar(bmb, ice));
+  m_ice_total_smb.push_back(rhoi*sumScalar(smb, entire));
+  m_ice_total_bmb.push_back(rhoi*sumScalar(bmb, entire));
   m_ice_floating_total_bmb.push_back(rhoi*sumScalar(bmb, floating));
   m_ice_grounded_total_bmb.push_back(rhoi*sumScalar(bmb, grounded));
-  m_ice_total_calving_flux.push_back(rhoi*sumScalar(cflux, entire));
-  m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, grounded));
+  m_ice_total_calving_flux.push_back(-rhoi/a_amrIce.dt()*sumScalar(cfluxdt, entire));
+  m_ice_total_gl_flux.push_back(rhoi*sumScalar(glflux, entire)); 
 
   int nt = m_time.size() - 1;
-  Real err = 0.0;
+  Real err_mass_con = 0.0;
   if (nt > 0){
-      err = (m_ice_volume[nt] - m_ice_volume[nt-1])/(m_time[nt] - m_time[nt-1])
-	  - (m_ice_total_smb[nt] + m_ice_total_bmb[nt] - m_ice_total_calving_flux[nt]);
-	
-  }
-  m_error_ice_mass_con.push_back(err);
+    Real dvdt = (m_ice_volume[nt] - m_ice_volume[nt-1])/(m_time[nt] - m_time[nt-1]);
+    err_mass_con = dvdt
+      - (m_ice_total_smb[nt] + m_ice_total_bmb[nt] + m_ice_total_calving_flux[nt]);
 
-  
+    
+    
+
+  }
+  m_error_ice_mass_con.push_back(err_mass_con);
+
+  // write  log
   for (int i = 0; i < m_cf_stuff.size(); i++)
     {
-      pout() << "DomainDiagnosticsData: " << m_cf_stuff[i].short_name << " = ";
-      
-	if ( (m_cf_stuff[i].data) && (m_cf_stuff[i].data->size() > nt))
-	  {
-	    pout() << (*m_cf_stuff[i].data)[nt] ;
-	  }
-	else
-	  {
-	    pout() << " ??? ";
-	  }
-      pout() << " " << m_cf_stuff[i].units << std::endl;
+      if ( (m_cf_stuff[i].data) && (m_cf_stuff[i].data->size() > nt))
+	{
+	  pout() << "DomainDiagnosticData: "
+	    "time = " << std::fixed << std::setprecision(3) << m_time[nt] << " "
+		 << m_cf_stuff[i].short_name << " = "
+		 << std::setprecision(12)  << std::scientific
+		 << (*m_cf_stuff[i].data)[nt] << " "
+		 << std::defaultfloat
+		 << m_cf_stuff[i].units << std::endl; 
+	}      
+    }
+
+  Real max_err_mass_con(-1.0);
+  ParmParse pp("DomainDiagnosticData");
+  pp.query("max_err_mass_con",max_err_mass_con);
+  if (max_err_mass_con > 0.0)
+    {
+      CH_assert(Abs(err_mass_con) < max_err_mass_con);
     }
   
 }

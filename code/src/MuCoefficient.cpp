@@ -289,6 +289,21 @@ void LevelDataMuCoefficient::setMuCoefficient
 	}
     } // end if (m_timeFileMap != NULL)
 
+  // limit mucoef, if requested.
+  ParmParse pp("LevelDataMuCoefficient");
+  Real min_value(0.0); pp.query("min_value", min_value);
+  if (min_value > 1.0e-10)
+  {
+  	for (DataIterator dit=a_muCoef.dataIterator(); dit.ok(); ++dit)
+            {
+              for (BoxIterator bit(a_muCoef[dit].box()); bit.ok(); ++bit)
+	      {
+		      const IntVect& iv = bit();
+	      	      a_muCoef[dit](iv) = std::max(a_muCoef[dit](iv),min_value);	
+	      }
+	    }
+  }
+
   for (int dir = 0; dir < SpaceDim; ++dir)
     {
       const ProblemDomain domain = a_muCoef.disjointBoxLayout().physDomain();

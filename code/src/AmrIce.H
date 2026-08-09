@@ -234,8 +234,7 @@ public:
   Vector<RefCountedPtr<LevelSigmaCS> > copyGeometry();
   
   // update ice thickness *and* bedrock elevation
-  void updateGeometry(Vector<RefCountedPtr<LevelSigmaCS> >& a_vect_coordSys_new, 
-                       Vector<RefCountedPtr<LevelSigmaCS> >& a_vectCoords_old, 
+  void updateGeometry( Vector<RefCountedPtr<LevelSigmaCS> >& a_vectCoords_old, 
                        const Vector<LevelData<FluxBox>* >& a_vectFluxes, 
                        Real a_dt);
   
@@ -708,14 +707,7 @@ protected:
    */
   void setIceFrac(const LevelData<FArrayBox>& a_thickness, int a_level);
 
-
-  /// update real-valued ice fraction after thickness update 
-  /** this is different from setIceFrac in that it preserves 
-      fractional values, but still sets values to zero in cells 
-      with no ice. Thickness is non-const because it may set very small
-      values of H (less than epsilon) to zero
-   */
-  void updateIceFrac(LevelData<FArrayBox>& a_thickness, int a_level);
+  
 
   void setIceFracBC(LevelData<FArrayBox>& a_iceFrac, const ProblemDomain& a_domain);
   
@@ -725,13 +717,10 @@ protected:
                      Real a_dt);
   
   /// Ice fraction *non-conservative* advection  df/dt + u. grad(f) = 0
-  /**
-     enforce df/dt = 0 where |grad(f)| > a_ tol
-  */
   void PGAdvectFrac(Vector<LevelData<FArrayBox>* >& a_f,
 		    //FC const Vector<LevelData<FluxBox>* >& a_u,
 		    const Vector<LevelData<FArrayBox>* >& a_u,
-		Real a_dt, Real a_tol);
+		    Real a_dt);
   
   /// update real-valued ice fraction through advection from neighboring cells
   void advectIceFrac2(Vector<LevelData<FArrayBox>* >& a_iceFrac,
@@ -772,7 +761,11 @@ protected:
 				   const Vector<LevelData<FArrayBox>* >& a_bts,
 				   const Vector<LevelData<FArrayBox>* >& a_vts
 				   );
-  
+
+  // remove ice that calves according to a calving rate (calved area)
+  void applyCalvingRate(CalvingModel::Stage a_stage);
+
+  // remove ice that calves according to a criterion
   void applyCalvingCriterion(CalvingModel::Stage a_stage);
   
   void eliminateRemoteIce();
